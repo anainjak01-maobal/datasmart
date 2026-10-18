@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DataSmart · Registrar cita</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='13' cy='13' r='9' fill='none' stroke='%2314161a' stroke-width='3'/%3E%3Cpath d='M20 20l7 7' stroke='%2314161a' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M8.5 16v-2.5M13 16v-5M17.5 16v-8' stroke='%232f5bff' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="datasmart.css?v=1">
+<style>
+.hoy { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-top: 26px; }
+.hoy > div { padding: 14px 0 14px 16px; border-left: 1px solid var(--line); min-width: 0; }
+.hoy > div:first-child { border-left: 0; padding-left: 0; }
+.hoy small { display: block; color: var(--muted); font-size: 14px; }
+.hoy b { display: block; font: 700 24px/1.2 var(--f-display); color: var(--ink); margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+form.reg { margin-top: 8px; display: grid; }
+.campo { display: grid; gap: 12px; padding-block: 24px; border-bottom: 1px solid var(--line); }
+.campo > label, .campo > .lab { font: 600 16px var(--f-body); color: var(--ink); }
+.campo input[type=date] { font: 500 17px var(--f-body); padding: 11px 14px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); width: 100%; max-width: 260px; }
+.grid-serv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.opc { appearance: none; text-align: left; background: #fff; border: 1.5px solid var(--line); border-radius: 12px; padding: 14px 14px 13px; cursor: pointer; display: grid; gap: 4px; min-width: 0; transition: border-color .15s ease, background .15s ease; }
+.opc:hover { border-color: var(--ink-2); }
+.opc b { font: 600 16px/1.25 var(--f-body); color: var(--ink); }
+.opc small { color: var(--muted); font-size: 14.5px; font-variant-numeric: tabular-nums; }
+.opc[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+.opc[aria-pressed="true"] small { color: var(--accent-ink); }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 0; border: 1.5px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; max-width: 560px; }
+.seg button { appearance: none; border: 0; background: transparent; padding: 12px 10px; font: 600 16px var(--f-body); color: var(--muted); cursor: pointer; border-left: 1px solid var(--line); }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.resumen { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; padding-block: 22px 8px; }
+.resumen .t { font: 700 26px var(--f-display); color: var(--ink); font-variant-numeric: tabular-nums; }
+.resumen .t small { font: 500 16px var(--f-body); color: var(--muted); margin-left: 8px; }
+.guardar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding-block: 16px 6px; }
+@media (max-width: 620px) {
+  .hoy { grid-template-columns: repeat(2, 1fr); }
+  .hoy > div:nth-child(odd) { border-left: 0; padding-left: 0; }
+  .hoy > div:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .grid-serv { grid-template-columns: 1fr 1fr; }
+  .seg button { font-size: 15px; padding: 11px 6px; }
+  .campo input[type=date] { max-width: none; }
+  .guardar .btn { width: 100%; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="DataSmart, inicio">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="13" cy="13" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M20 20l7 7" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><path d="M8.5 16v-2.5M13 16v-5M17.5 16v-8" stroke="#2f5bff" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <b>DataSmart</b><span id="negocio">Peluquería Meylin · Maicao</span>
+    </a>
+    <nav class="nav" aria-label="Principal"><a href="index.html" aria-current="page">Registrar cita</a><a href="tablero.html">Tablero</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="block" style="border-top:0;padding-top:40px">
+    <h1 class="h1">Registrar una cita</h1>
+    <p class="lede" style="margin-top:10px">Una cita por vez. Elige el servicio y cómo llegó la clienta. El precio y el costo salen de la lista de servicios, no se escriben a mano.</p>
+    <div class="hoy" id="hoy" aria-live="polite"></div>
+  </section>
+
+  <div id="avisos"></div>
+
+  <form class="reg" id="form" novalidate>
+    <div class="campo">
+      <label for="fecha">Fecha de la cita</label>
+      <input type="date" id="fecha" required>
+    </div>
+
+    <div class="campo">
+      <span class="lab" id="l-serv">Servicio</span>
+      <div class="grid-serv" id="servicios" role="group" aria-labelledby="l-serv"></div>
+    </div>
+
+    <div class="campo">
+      <span class="lab" id="l-llega">¿Cómo llegó?</span>
+      <div class="seg" id="llega" role="group" aria-labelledby="l-llega">
+        <button type="button" data-v="WhatsApp" aria-pressed="false">WhatsApp</button>
+        <button type="button" data-v="Llegó sin cita" aria-pressed="false">Sin cita</button>
+        <button type="button" data-v="Vecina" aria-pressed="false">Vecina</button>
+      </div>
+    </div>
+
+    <div class="campo">
+      <span class="lab" id="l-cli">¿Es clienta nueva o ya venía?</span>
+      <div class="seg" id="cliente" role="group" aria-labelledby="l-cli">
+        <button type="button" data-v="Nueva" aria-pressed="false">Nueva</button>
+        <button type="button" data-v="Ya venía" aria-pressed="false">Ya venía</button>
+      </div>
+    </div>
+
+    <div class="campo" style="border-bottom:0">
+      <span class="lab" id="l-est">¿Llegó a la cita?</span>
+      <div class="seg" id="estado" role="group" aria-labelledby="l-est">
+        <button type="button" data-v="Atendida" aria-pressed="true">Sí, atendida</button>
+        <button type="button" data-v="No llegó" aria-pressed="false">No llegó</button>
+      </div>
+    </div>
+
+    <div class="resumen">
+      <div class="t" id="res-t">Elige un servicio</div>
+      <p class="note" id="res-n"></p>
+    </div>
+    <div class="guardar">
+      <button class="btn acc" id="guardar" type="submit">Guardar cita</button>
+      <button class="btn line sm" id="limpiar" type="button">Empezar de nuevo</button>
+    </div>
+  </form>
+
+  <p class="foot">Las citas se guardan en la hoja Agenda. Los nombres de las clientas no se piden: no hacen falta para leer la agenda.</p>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script src="config.js?v=1"></script>
+<script src="demo-data.js?v=1"></script>
+<script src="lib.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); }, X = window.DS, esc = X.esc, money = X.money;
+  var data = null, sel = { servicio: "", llegada: "", cliente: "", estado: "Atendida" };
+  $("negocio").textContent = X.CFG.NEGOCIO || "Agenda";
+
+  function toast(t) { var e = $("toast"); e.textContent = t; e.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(function () { e.hidden = true; }, 3200); }
+  function servicioInfo(n) { return (data && data.servicios || []).filter(function (s) { return s.servicio === n; })[0]; }
+
+  function pintaServicios() {
+    $("servicios").innerHTML = data.servicios.map(function (s) {
+      return '<button type="button" class="opc" data-s="' + esc(s.servicio) + '" aria-pressed="' + (sel.servicio === s.servicio ? "true" : "false") + '"><b>' + esc(s.servicio) + "</b><small>" + money(s.precio) + "</small></button>";
+    }).join("");
+  }
+  function pintaSeg(id, key) {
+    document.querySelectorAll("#" + id + " button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.v === sel[key] ? "true" : "false"); });
+  }
+  function resumen() {
+    var s = servicioInfo(sel.servicio), t = $("res-t"), n = $("res-n");
+    if (!s) { t.textContent = "Elige un servicio"; n.textContent = "Cuando elijas el servicio aparece el ingreso y el margen de esta cita."; return; }
+    if (sel.estado === "No llegó") { t.innerHTML = "$0<small>sin ingreso</small>"; n.textContent = "La cita no llegó: se guarda con ingreso cero. Así el sábado no parece más lleno de lo que fue."; return; }
+    var m = s.precio - s.costo;
+    t.innerHTML = money(s.precio) + "<small>ingreso</small> &nbsp;" + money(m) + "<small>margen</small>";
+    n.textContent = "Costo de insumos " + money(s.costo) + ". El margen es antes de arriendo y del tiempo de la dueña.";
+  }
+  function pintaHoy() {
+    var hoy = X.today(), H = data.citas.filter(function (c) { return c.fecha === hoy; }), att = H.filter(function (c) { return X.norm(c.estado) === "atendida"; });
+    var ing = X.sum(att, function (c) { return c.precio; });
+    $("hoy").innerHTML = '<div><small>Citas hoy</small><b>' + H.length + "</b></div>" +
+      '<div><small>Atendidas</small><b>' + att.length + "</b></div>" +
+      '<div><small>No llegaron</small><b>' + (H.length - att.length) + "</b></div>" +
+      '<div><small>Ingreso de hoy</small><b>' + money(ing) + "</b></div>";
+  }
+
+  $("servicios").addEventListener("click", function (e) { var b = e.target.closest("button[data-s]"); if (!b) return; sel.servicio = b.dataset.s; pintaServicios(); resumen(); });
+  ["llega", "cliente", "estado"].forEach(function (id) {
+    var key = id === "llega" ? "llegada" : id;
+    $(id).addEventListener("click", function (e) { var b = e.target.closest("button[data-v]"); if (!b) return; sel[key] = b.dataset.v; pintaSeg(id, key); resumen(); });
+  });
+
+  function validar() {
+    if (!$("fecha").value) return "Elige la fecha de la cita.";
+    if ($("fecha").value > X.today()) return "La fecha no puede ser posterior a hoy. Las citas se registran cuando ya ocurrieron.";
+    if (!sel.servicio) return "Elige el servicio.";
+    if (!sel.llegada) return "Indica cómo llegó la clienta.";
+    if (!sel.cliente) return "Indica si es clienta nueva o ya venía.";
+    return "";
+  }
+  function limpiarForm() {
+    sel.servicio = ""; sel.llegada = ""; sel.cliente = ""; sel.estado = "Atendida";
+    pintaServicios(); pintaSeg("llega", "llegada"); pintaSeg("cliente", "cliente"); pintaSeg("estado", "estado"); resumen();
+  }
+  $("limpiar").addEventListener("click", function () { limpiarForm(); $("resultado") && ($("resultado").innerHTML = ""); });
+
+  $("form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var err = validar(); if (err) { toast(err); return; }
+    if (!X.CFG.REGISTRO) { toast("El registro todavía no está conectado (ver LEEME.txt, paso 4)."); return; }
+    var b = $("guardar"); b.disabled = true; b.textContent = "Guardando…";
+    var fecha = $("fecha").value;
+    X.registrar({ fecha: fecha, servicio: sel.servicio, llegada: sel.llegada, cliente: sel.cliente, estado: sel.estado }).then(function (r) {
+      b.disabled = false; b.textContent = "Guardar cita";
+      if (r.ok) {
+        var s = servicioInfo(sel.servicio);
+        data.citas.push({ id: r.id, fecha: fecha, servicio: sel.servicio, llegada: sel.llegada, tipo: sel.cliente, estado: sel.estado, precio: r.precio, costo: r.costo });
+        var txt = sel.estado === "No llegó" ? "No llegó, sin ingreso." : "Ingreso " + money(r.precio) + " · margen " + money(r.precio - r.costo) + ".";
+        $("avisos").innerHTML = '<div class="aviso ok" role="status"><b>Cita ' + esc(r.id) + " guardada.</b> " + esc(txt) + " Hoy van " + (function (n) { return n + (n === 1 ? " cita registrada." : " citas registradas."); })(data.citas.filter(function (c) { return c.fecha === X.today(); }).length) + "</div>";
+        limpiarForm(); pintaHoy();
+      } else if (r.sinConfig) {
+        toast("El registro todavía no está conectado.");
+      } else {
+        $("avisos").innerHTML = '<div class="aviso err" role="alert">' + esc(r.error || "No se pudo guardar la cita.") + "</div>";
+      }
+    });
+  });
+
+  $("fecha").max = X.today(); $("fecha").value = X.today();
+  $("fecha").addEventListener("change", function () { pintaHoy(); });
+
+  X.loadData().then(function (d) {
+    data = d;
+    var av = d.avisos.slice();
+    if (d.modo === "demo" && !d.avisos.length) av.push("Modo de demostración: se muestran datos de ejemplo y las citas no se guardan todavía.");
+    if (!X.CFG.REGISTRO) av.push("El registro automático no está conectado (REGISTRO en config.js).");
+    $("avisos").innerHTML = av.map(function (a) { return '<div class="aviso' + (d.avisos.length ? " err" : "") + '" role="status">' + esc(a) + "</div>"; }).join("");
+    pintaServicios(); pintaSeg("estado", "estado"); pintaHoy(); resumen();
+  });
+})();
+</script>
+</body>
+</html>

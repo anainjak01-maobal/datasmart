@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DataSmart · Tablero</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='13' cy='13' r='9' fill='none' stroke='%2314161a' stroke-width='3'/%3E%3Cpath d='M20 20l7 7' stroke='%2314161a' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M8.5 16v-2.5M13 16v-5M17.5 16v-8' stroke='%232f5bff' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="datasmart.css?v=1">
+<style>
+.bar-top { display: flex; justify-content: space-between; align-items: end; gap: 20px; flex-wrap: wrap; padding-block: 38px 6px; }
+.bar-top .h1 { font-size: clamp(28px, 4vw, 40px); }
+.rango { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
+.rango label { display: grid; gap: 4px; font: 600 14px var(--f-body); color: var(--muted); }
+.rango input { font: 500 16px var(--f-body); padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); }
+
+.hero { padding-block: 34px 40px; display: grid; gap: 12px; }
+.hero .cifra { font: 700 clamp(64px, 12vw, 136px)/.95 var(--f-display); letter-spacing: -.035em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.hero .cifra span { color: var(--accent); }
+.hero p { margin: 0; max-width: 56ch; font-size: 19px; color: var(--ink-2); }
+.cifras { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 26px; border-top: 1px solid var(--line); }
+.cifras > div { padding: 18px 0 0 18px; border-left: 1px solid var(--line); min-width: 0; }
+.cifras > div:first-child { border-left: 0; padding-left: 0; }
+.cifras small { display: block; color: var(--muted); font-size: 15px; }
+.cifras b { display: block; font: 700 clamp(26px, 3vw, 34px)/1.1 var(--f-display); color: var(--ink); margin-top: 6px; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.cifras b.acc { color: var(--accent); }
+
+.lecturas { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.lecturas li { padding-block: 16px; border-top: 1px solid var(--line); font-size: 18px; color: var(--ink-2); max-width: 72ch; }
+.lecturas li:last-child { border-bottom: 1px solid var(--line); }
+.lecturas b { color: var(--ink); font-weight: 700; }
+
+.dos { display: grid; grid-template-columns: 1.15fr 1fr; gap: 56px; align-items: start; }
+
+.fila { display: grid; grid-template-columns: minmax(130px, 200px) 1fr minmax(96px, 130px); gap: 16px; align-items: center; padding-block: 12px; border-top: 1px solid var(--line); font-size: 16.5px; }
+.fila:last-child { border-bottom: 1px solid var(--line); }
+.fila .n b { display: block; color: var(--ink); font-weight: 600; }
+.fila .n small { color: var(--muted); font-size: 14px; }
+.fila .pista { height: 12px; background: var(--soft); border-radius: 2px; overflow: hidden; }
+.fila .pista i { display: block; height: 100%; width: 0; background: var(--bar); transition: width .9s cubic-bezier(.2,.7,.2,1); }
+.fila.top .pista i { background: var(--accent); }
+.fila .v { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 700; }
+.fila .n { grid-column: 1; grid-row: 1; }
+.fila .v small { display: block; font-weight: 400; color: var(--muted); font-size: 14px; }
+
+.cols { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; height: 280px; border-bottom: 1px solid var(--ink); padding-top: 4px; }
+.col { display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; justify-items: center; align-items: end; gap: 8px; min-width: 0; }
+.col .zona { height: 100%; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.col .b { width: 100%; max-width: 64px; background: var(--bar); border-radius: 3px 3px 0 0; height: 0; transition: height .9s cubic-bezier(.2,.7,.2,1); }
+.col.top .b { background: var(--accent); }
+.col .val { font: 700 15px var(--f-display); color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.col .d { font-size: 15px; color: var(--ink-2); padding-bottom: 6px; }
+.col .c { font-size: 13px; color: var(--muted); }
+.col .ds { display: none; }
+.col-wrap { position: relative; }
+.nota-dia { margin-top: 14px; }
+
+.grupo { display: grid; gap: 14px; }
+.grupo + .grupo { margin-top: 30px; }
+.comp { display: grid; gap: 6px; }
+.comp .l { display: flex; justify-content: space-between; gap: 12px; font-size: 16.5px; color: var(--ink); }
+.comp .l b { font-variant-numeric: tabular-nums; }
+.comp .pista { height: 14px; background: var(--soft); border-radius: 2px; overflow: hidden; }
+.comp .pista i { display: block; height: 100%; width: 0; background: var(--bar); transition: width .9s cubic-bezier(.2,.7,.2,1); }
+.comp.top .pista i { background: var(--accent); }
+
+.puntos { display: grid; grid-template-columns: repeat(11, 1fr); gap: 10px; max-width: 360px; }
+.punto { aspect-ratio: 1; border-radius: 50%; background: var(--ink-2); opacity: .85; }
+.punto.no { background: transparent; box-shadow: inset 0 0 0 2px var(--accent); opacity: 1; }
+.leyenda { display: flex; gap: 18px; flex-wrap: wrap; font-size: 14.5px; color: var(--muted); margin-top: 10px; }
+.leyenda span { display: inline-flex; align-items: center; gap: 8px; }
+.leyenda i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.leyenda .a { background: var(--ink-2); } .leyenda .b { box-shadow: inset 0 0 0 2px var(--accent); }
+.grande { font: 700 clamp(40px, 5vw, 56px)/1 var(--f-display); letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.grande span { color: var(--accent); }
+.cuadro { display: grid; gap: 10px; }
+.cuadro p { margin: 0; color: var(--ink-2); font-size: 17px; max-width: 46ch; }
+
+.hacer { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.hacer li { display: grid; grid-template-columns: 1fr; gap: 6px; padding-block: 20px; border-top: 1px solid var(--line); }
+.hacer li:last-child { border-bottom: 1px solid var(--line); }
+.hacer b { font: 700 21px/1.3 var(--f-display); color: var(--ink); letter-spacing: -.005em; max-width: 52ch; }
+.hacer small { color: var(--muted); font-size: 16px; max-width: 70ch; }
+
+@media (max-width: 860px) {
+  .dos { grid-template-columns: 1fr; gap: 44px; }
+}
+@media (max-width: 640px) {
+  .cifras { grid-template-columns: repeat(2, 1fr); }
+  .cifras > div:nth-child(odd) { border-left: 0; padding-left: 0; }
+  .cifras > div:nth-child(n+3) { border-top: 1px solid var(--line); margin-top: 18px; }
+  .fila { grid-template-columns: 1fr auto; row-gap: 8px; }
+  .fila .n { grid-column: 1; grid-row: 1; }
+  .fila .pista { grid-column: 1 / -1; grid-row: 2; }
+  .fila .v { grid-column: 2; grid-row: 1; }
+  .col .val { font-size: 11.5px; }
+  .col .dl { display: none; } .col .ds { display: inline; }
+  .cols { gap: 6px; height: 220px; }
+  .col .d { font-size: 13.5px; }
+  .col .c { font-size: 12px; }
+  .puntos { grid-template-columns: repeat(11, 1fr); gap: 7px; }
+  section.block { padding-block: 34px; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="DataSmart, inicio">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="13" cy="13" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M20 20l7 7" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><path d="M8.5 16v-2.5M13 16v-5M17.5 16v-8" stroke="#2f5bff" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <b>DataSmart</b><span id="negocio">Peluquería Meylin · Maicao</span>
+    </a>
+    <nav class="nav" aria-label="Principal"><a href="index.html">Registrar cita</a><a href="tablero.html" aria-current="page">Tablero</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="bar-top">
+    <div>
+      <h1 class="h1">La agenda, leída</h1>
+      <p class="lede" id="periodo" style="margin-top:8px">Cargando datos…</p>
+    </div>
+    <div class="rango">
+      <label>Desde<input type="date" id="desde"></label>
+      <label>Hasta<input type="date" id="hasta"></label>
+      <button class="btn line sm" id="todo" type="button">Todo el periodo</button>
+    </div>
+  </div>
+  <div id="avisos"></div>
+
+  <section class="hero" id="hero" aria-label="Resumen"></section>
+
+  <section class="block" aria-labelledby="h-lec">
+    <div class="head"><h2 class="h2" id="h-lec">Lo que dice la agenda</h2></div>
+    <ul class="lecturas" id="lecturas"></ul>
+  </section>
+
+  <section class="block" aria-labelledby="h-silla">
+    <div class="head"><h2 class="h2" id="h-silla">Qué paga la silla</h2><p class="note">Margen por servicio en las citas atendidas. Entre paréntesis, el número de citas. La barra oscura es el que más deja.</p></div>
+    <div id="silla"></div>
+  </section>
+
+  <section class="block" aria-labelledby="h-dia">
+    <div class="head"><h2 class="h2" id="h-dia">Cada día de la semana</h2><p class="note">Ingreso de las citas atendidas, sumado en todo el periodo. Cada día de la semana aparece dos veces en estas doce jornadas.</p></div>
+    <div class="col-wrap"><div class="cols" id="dias" role="img" aria-label="Ingreso por día de la semana"></div></div>
+    <p class="note nota-dia" id="dia-nota"></p>
+  </section>
+
+  <section class="block" aria-labelledby="h-quien">
+    <div class="dos">
+      <div class="grupo">
+        <div class="head" style="margin-bottom:0"><h2 class="h2" id="h-quien">Quién viene</h2><p class="note">Ingreso promedio por cita atendida, según si la clienta ya venía o es nueva.</p></div>
+        <div id="quien"></div>
+      </div>
+      <div class="grupo">
+        <div class="head" style="margin-bottom:0"><h2 class="h2">Quién no llega</h2><p class="note">Cada punto es una cita por WhatsApp. El anillo marca las que no llegaron.</p></div>
+        <div class="cuadro">
+          <div class="puntos" id="puntos" role="img" aria-label="Citas por WhatsApp que no llegaron"></div>
+          <div class="leyenda"><span><i class="a"></i>Llegó</span><span><i class="b"></i>No llegó</span></div>
+          <div class="grande" id="grande-noll" style="margin-top:14px"></div>
+          <p id="noll-txt"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="h-hacer">
+    <div class="head"><h2 class="h2" id="h-hacer">Lo que puede cambiar la otra semana</h2><p class="note">Cuatro cambios pequeños. Cada uno con el dato que lo sostiene. No se mide si funcionaron: eso se verá en la siguiente agenda.</p></div>
+    <ul class="hacer" id="hacer"></ul>
+  </section>
+
+  <p class="foot" id="foot"></p>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script src="config.js?v=1"></script>
+<script src="demo-data.js?v=1"></script>
+<script src="lib.js?v=1"></script>
+<script src="analisis.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); }, X = window.DS, esc = X.esc, money = X.money, ORDEN = X.ORDEN;
+  var data, A, loadedAt;
+  $("negocio").textContent = X.CFG.NEGOCIO || "Agenda";
+  function toast(t) { var e = $("toast"); e.textContent = t; e.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(function () { e.hidden = true; }, 3000); }
+  function pct(a, b) { return b ? Math.round(a * 100 / b) : 0; }
+  function sube(el) { requestAnimationFrame(function () { requestAnimationFrame(function () { el.querySelectorAll("[data-w]").forEach(function (i) { i.style.width = i.dataset.w; }); el.querySelectorAll("[data-h]").forEach(function (i) { i.style.height = i.dataset.h; }); }); }); }
+
+  function renderHero() {
+    var p = Math.round(A.pct * 100);
+    $("hero").innerHTML = '<div class="cifra">' + money(A.margen) + "</div>" +
+      "<p>de margen en " + A.nDias + (A.nDias === 1 ? " día" : " días") + ", el " + p + " % de lo que entró. Es antes de arriendo y del tiempo de la dueña: no es la ganancia.</p>" +
+      '<div class="cifras">' +
+      "<div><small>Citas anotadas</small><b>" + A.n + "</b></div>" +
+      "<div><small>Atendidas</small><b>" + A.nAtt + "</b></div>" +
+      '<div><small>No llegaron</small><b class="acc">' + A.nNoll + "</b></div>" +
+      "<div><small>Ingreso</small><b>" + money(A.ing) + "</b></div></div>";
+  }
+
+  function renderLecturas() {
+    var L = DSA.lecturas(A);
+    $("lecturas").innerHTML = L.map(function (x) { return "<li>" + x.t + "</li>"; }).join("");
+  }
+
+  function renderSilla() {
+    var S = A.servicios; if (!S.length) { $("silla").innerHTML = ""; return; }
+    var mx = Math.max.apply(null, S.map(function (s) { return s.margen; }).concat([1]));
+    $("silla").innerHTML = S.map(function (s, i) {
+      return '<div class="fila' + (i === 0 ? " top" : "") + '"><div class="n"><b>' + esc(s.servicio) + "</b><small>" + s.citas + (s.citas === 1 ? " cita" : " citas") + "</small></div>" +
+        '<div class="pista"><i data-w="' + (s.margen * 100 / mx).toFixed(1) + '%"></i></div>' +
+        '<div class="v">' + money(s.margen) + "<small>" + money(s.mpc) + " por cita</small></div></div>";
+    }).join("");
+    sube($("silla"));
+  }
+
+  function renderDias() {
+    var D = ORDEN.map(function (d) { return { d: d, ing: A.dow[d].ing, c: A.dow[d].citas }; });
+    var mx = Math.max.apply(null, D.map(function (x) { return x.ing; }).concat([1]));
+    $("dias").innerHTML = D.map(function (x) {
+      var h = (x.ing * 100 / mx).toFixed(1) + "%", top = x.d === A.diaTop && x.ing > 0;
+      return '<div class="col' + (top ? " top" : "") + '"><span class="val">' + (x.ing ? money(x.ing) : "—") + '</span><div class="zona"><div class="b" data-h="' + h + '" title="' + x.d + ": " + money(x.ing) + " en " + x.c + ' citas"></div></div><span class="d"><span class="dl">' + x.d + '</span><span class="ds">' + x.d.slice(0, 3) + '</span></span><span class="c">' + x.c + (x.c === 1 ? " cita" : " citas") + "</span></div>";
+    }).join("");
+    sube($("dias"));
+    $("dia-nota").innerHTML = A.diaTop ? "El <b>" + esc(A.diaTop.toLowerCase()) + "</b> es el día con más ingreso. En ventas por día hay que mirar un mes entero antes de decir que un día siempre es flojo." : "";
+  }
+
+  function renderQuien() {
+    var t = A.tipo, ya = t["Ya venía"] || { ipc: 0, citas: 0 }, nu = t["Nueva"] || { ipc: 0, citas: 0 };
+    var mx = Math.max(ya.ipc, nu.ipc, 1);
+    $("quien").innerHTML = '<div class="comp top"><div class="l"><span>Ya venía · ' + ya.citas + " citas</span><b>" + money(ya.ipc) + "</b></div><div class=\"pista\"><i data-w=\"" + (ya.ipc * 100 / mx).toFixed(1) + '%"></i></div></div>' +
+      '<div class="comp"><div class="l"><span>Nueva · ' + nu.citas + " citas</span><b>" + money(nu.ipc) + "</b></div><div class=\"pista\"><i data-w=\"" + (nu.ipc * 100 / mx).toFixed(1) + '%"></i></div></div>' +
+      '<p class="note" style="margin-top:8px">Casi toda la diferencia viene del servicio. Los colores y los peinados de evento fueron de clientas que ya venían; la mayoría de los cortes de caballero fueron de clientes nuevos sin cita.</p>';
+    sube($("quien"));
+  }
+
+  function renderNoll() {
+    var w = A.wa, sc = A.sinCita;
+    var pts = ""; for (var i = 0; i < w.citas; i++) pts += '<span class="punto' + (i < w.noll ? " no" : "") + '"></span>';
+    $("puntos").innerHTML = pts;
+    $("grande-noll").innerHTML = w.citas ? w.noll + '<span> de ' + w.citas + "</span>" : "—";
+    $("noll-txt").textContent = w.citas ? "Citas por WhatsApp en que la clienta no llegó (" + pct(w.noll, w.citas) + " %). Las que llegaron sin cita o por una vecina: " + sc.noll + " de " + sc.citas + " faltaron." : "No hay citas por WhatsApp en este periodo.";
+  }
+
+  function renderHacer() {
+    var top = A.topServicio, bajo = A.bajoMargen, dm = A.dow["Martes"] || { citas: 0, ing: 0 };
+    var L = [];
+    L.push({ t: "No soltar una hora de sábado a un corte si ya hay un color pedido.", s: top && bajo && top.servicio !== bajo.servicio ? "Un " + esc(top.servicio.toLowerCase()) + " deja " + money(top.mpc) + " de margen por cita; un " + esc(bajo.servicio.toLowerCase()) + ", " + money(bajo.mpc) + "." : "Mira el margen por cita antes de dar una hora." });
+    L.push({ t: "El martes, manicure o descanso de la agenda, sin comprar tinte de más.", s: "Los martes del periodo: " + dm.citas + (dm.citas === 1 ? " cita atendida" : " citas atendidas") + " y " + money(dm.ing) + " de ingreso." });
+    L.push({ t: "Si el WhatsApp no confirma el día anterior, ofrece la hora.", s: A.wa.citas ? "Por WhatsApp no llegó " + A.wa.noll + " de " + A.wa.citas + " citas. Quien llega sin cita nunca faltó." : "Sin citas por WhatsApp en el periodo." });
+    L.push({ t: "No prometer la temporada con doce días de datos.", s: A.nDias + (A.nDias === 1 ? " día" : " días") + " de agenda alcanzan para acomodar la otra semana, no para predecir diciembre." });
+    $("hacer").innerHTML = L.map(function (x) { return "<li><b>" + esc(x.t) + "</b><small>" + x.s + "</small></li>"; }).join("");
+  }
+
+  function renderAll() {
+    A = DSA.analizar(data.citas, data.servicios, { desde: $("desde").value, hasta: $("hasta").value });
+    if (!A.n) {
+      $("periodo").textContent = "Sin citas en este periodo. Cambia las fechas.";
+      $("hero").innerHTML = ""; $("lecturas").innerHTML = ""; $("silla").innerHTML = ""; $("dias").innerHTML = ""; $("dia-nota").textContent = ""; $("quien").innerHTML = ""; $("puntos").innerHTML = ""; $("grande-noll").textContent = ""; $("noll-txt").textContent = ""; $("hacer").innerHTML = "";
+      return;
+    }
+    $("periodo").textContent = "Del " + X.fmtDate(A.desde) + " al " + X.fmtDate(A.hasta) + " · " + A.nDias + (A.nDias === 1 ? " día" : " días") + " de agenda";
+    renderHero(); renderLecturas(); renderSilla(); renderDias(); renderQuien(); renderNoll(); renderHacer();
+    $("foot").textContent = (data.modo === "demo" ? "Datos de demostración: la agenda de 17 al 29 de agosto de 2026, sin nombres. " : "Datos de la hoja de Google. ") + "Actualizado a las " + loadedAt + ". Los datos no muestran nombres de clientas.";
+  }
+
+  function load() {
+    $("periodo").textContent = "Cargando datos…";
+    return X.loadData().then(function (d) {
+      data = d; loadedAt = new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }).replace(/\.$/, "");
+      var av = d.avisos.slice(); if (d.modo === "demo" && !av.length) av.push("Estás viendo datos de demostración. Conecta las hojas en config.js para ver la agenda real.");
+      $("avisos").innerHTML = av.map(function (a) { return '<div class="aviso' + (d.avisos.length ? " err" : "") + '" role="status">' + esc(a) + "</div>"; }).join("");
+      var f = d.citas.map(function (c) { return c.fecha; }).filter(Boolean).sort();
+      if (f.length) { $("desde").min = $("hasta").min = f[0]; $("desde").max = $("hasta").max = f[f.length - 1]; }
+      renderAll();
+    });
+  }
+  ["desde", "hasta"].forEach(function (id) { $(id).addEventListener("change", function () { if (data) renderAll(); }); });
+  $("todo").addEventListener("click", function () { $("desde").value = ""; $("hasta").value = ""; if (data) renderAll(); });
+  load();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+DATASMART · SITIO DE LA AGENDA (Peluquería Meylin)
+
+Qué hace
+- Registrar una cita: servicio, cómo llegó, clienta nueva o que ya venía, y si llegó o no.
+- Tablero: margen por servicio, días de la semana, quién viene, quién no llega y cuatro cambios para la otra semana.
+- El precio y el costo salen de la hoja Servicios. Nadie los escribe en la cita.
+
+Privacidad (importante)
+- La hoja Agenda que se PUBLICA no debe tener nombres de clientas. Los nombres se quedan solo en el cuaderno o en un Excel privado.
+- El sitio no pide nombres. No hacen falta para leer la agenda.
+
+PASO 1. Hoja de Google
+1. Abre el archivo datasmart-datos.xlsx en Google Drive y elige Archivo > Importar, o súbelo y ábrelo con Google Sheets.
+2. Deben quedar las hojas Servicios y Agenda (las demás pestañas no se publican).
+
+PASO 2. Publicar las dos hojas
+1. Archivo > Compartir > Publicar en la web.
+2. En la lista elige Servicios, formato CSV, y Publicar. Copia el enlace.
+3. Repite con Agenda. Copia el segundo enlace.
+4. Pega los dos enlaces en config.js, dentro de HOJAS (servicios y agenda).
+
+PASO 3. Registro automático (Apps Script)
+1. En la hoja: Extensiones > Apps Script. Borra lo que aparezca y pega el contenido de apps-script/Codigo.gs.
+2. Guarda (disco). Luego Implementar > Nueva implementación > tipo "Aplicación web".
+3. Ejecutar como: Yo. Quién tiene acceso: Cualquier persona. Implementar y autorizar con tu cuenta.
+4. Copia la URL que termina en /exec y pégala en config.js, en REGISTRO.
+5. Prueba: abre esa URL en el navegador. Debe aparecer {"ok":true,...}.
+
+PASO 4. Subir el sitio a GitHub Pages
+1. En GitHub, crea el repositorio datasmart y sube todos los archivos de esta carpeta.
+2. Settings > Pages > Deploy from a branch > main / root.
+3. El sitio queda en https://TU-USUARIO.github.io/datasmart/ (la página de registro es index.html y el tablero es tablero.html).
+
+Cómo se cambia un servicio o un precio
+- En la hoja Servicios: se cambia el precio o el costo. La página lo toma en la siguiente carga.
+- Un servicio nuevo se agrega al final de la hoja Servicios.
+
+Qué no hace todavía (para la siguiente versión)
+- No mide cuánto dura cada servicio. Sin eso no hay margen por hora de silla.
+- No confirma citas por WhatsApp; solo registra si llegó.
