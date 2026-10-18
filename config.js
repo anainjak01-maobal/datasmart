@@ -14,5 +14,5 @@ window.DS_CONFIG = {
 
   /* Registro automático: dirección de la aplicación web de Apps Script (ver LEEME.txt, paso 4).
      Si queda vacío, la página de registro muestra el modo de demostración y no guarda nada. */
-  REGISTRO: "https://script.google.com/macros/s/AKfycbw2MFnn32mrVFpe2sd_fcllng0yZ1cf0vvEaG1KjvnFp0mQ6RNUnCS-P8VAb82sFOZdoA/exec"
+  REGISTRO: ""
 };

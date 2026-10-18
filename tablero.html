@@ -102,6 +102,39 @@
   .puntos { grid-template-columns: repeat(11, 1fr); gap: 7px; }
   section.block { padding-block: 34px; }
 }
+.tabs { display: flex; gap: 26px; border-bottom: 1px solid var(--line); margin-top: 18px; }
+.tabs button { appearance: none; background: none; border: 0; padding: 10px 0 12px; font: 600 16px var(--f-body); color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs button:hover { color: var(--ink); }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.panel[hidden] { display: none; }
+.panel { animation: sube .35s ease both; }
+.preg { display: grid; gap: 8px; padding-block: 26px; border-top: 1px solid var(--line); max-width: 74ch; }
+.preg:first-child { border-top: 0; padding-top: 6px; }
+.preg h3 { margin: 0; font: 700 22px/1.25 var(--f-display); color: var(--ink); letter-spacing: -.005em; }
+.preg .resp { margin: 0; font-size: 18px; color: var(--ink-2); }
+.preg .resp b { color: var(--ink); }
+.preg .muestra { margin: 0; font-size: 14.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.preg .vere { margin: 4px 0 0; font: 700 15px var(--f-body); letter-spacing: 0; }
+.preg .vere.si { color: var(--accent); }
+.preg .vere.no { color: var(--ink-2); }
+.preg .vere::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; background: var(--accent); }
+.preg .vere.no::before { background: transparent; box-shadow: inset 0 0 0 2px var(--ink-2); }
+.preg .note { font-size: 16px; color: var(--ink-2); margin: 0; }
+.cal { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.cal li { display: grid; grid-template-columns: 74px 1fr; gap: 16px; padding-block: 15px; border-top: 1px solid var(--line); }
+.cal li:last-child { border-bottom: 1px solid var(--line); }
+.cal b { font: 600 17px var(--f-body); color: var(--ink); }
+.cal small { display: block; color: var(--muted); font-size: 15.5px; margin-top: 2px; }
+.cal .tag { font: 700 13px var(--f-body); color: var(--muted); padding-top: 3px; }
+.cal .tag.revisar { color: var(--accent); }
+.ciclo { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-top: 8px; }
+.ciclo > div { padding: 16px 16px 16px 0; min-width: 0; }
+.ciclo > div + div { padding-left: 16px; border-left: 1px solid var(--line); }
+.ciclo b { display: block; font: 700 19px var(--f-display); color: var(--ink); }
+.ciclo small { display: block; color: var(--muted); font-size: 15px; margin-top: 4px; }
+.btn.line.sm { padding: 9px 14px; }
+@media (max-width: 860px) { .ciclo { grid-template-columns: 1fr; } .ciclo > div { padding: 12px 0; } .ciclo > div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); } }
+@media (max-width: 640px) { .preg h3 { font-size: 19px; } .cal li { grid-template-columns: 1fr; gap: 4px; } }
 </style>
 </head>
 <body>
@@ -125,10 +158,17 @@
       <label>Desde<input type="date" id="desde"></label>
       <label>Hasta<input type="date" id="hasta"></label>
       <button class="btn line sm" id="todo" type="button">Todo el periodo</button>
+      <button class="btn line sm" id="csv" type="button">Descargar CSV</button>
     </div>
   </div>
   <div id="avisos"></div>
+  <nav class="tabs" role="tablist" aria-label="Secciones">
+    <button type="button" role="tab" data-tab="resumen" aria-selected="true">Resumen</button>
+    <button type="button" role="tab" data-tab="preguntas" aria-selected="false">Preguntas</button>
+    <button type="button" role="tab" data-tab="calidad" aria-selected="false">Calidad y método</button>
+  </nav>
 
+  <div class="panel" id="p-resumen">
   <section class="hero" id="hero" aria-label="Resumen"></section>
 
   <section class="block" aria-labelledby="h-lec">
@@ -169,6 +209,41 @@
     <div class="head"><h2 class="h2" id="h-hacer">Lo que puede cambiar la otra semana</h2><p class="note">Cuatro cambios pequeños. Cada uno con el dato que lo sostiene. No se mide si funcionaron: eso se verá en la siguiente agenda.</p></div>
     <ul class="hacer" id="hacer"></ul>
   </section>
+
+  </div>
+
+  <div class="panel" id="p-preguntas" hidden>
+    <section class="block" style="border-top:0;padding-top:34px">
+      <div class="head"><h2 class="h2">Cuatro preguntas, con su muestra</h2><p class="note">Cada respuesta dice cuántos datos la respaldan. Si la muestra es chica, se dice que todavía no se puede afirmar. Las preguntas se responden con el periodo elegido arriba.</p></div>
+      <div id="preg"></div>
+    </section>
+  </div>
+
+  <div class="panel" id="p-calidad" hidden>
+    <section class="block" style="border-top:0;padding-top:34px">
+      <div class="head"><h2 class="h2">¿Se puede confiar en estos datos?</h2><p class="note">Revisiones sobre toda la agenda, sin importar las fechas elegidas.</p></div>
+      <ul class="cal" id="cal"></ul>
+    </section>
+    <section class="block">
+      <div class="head"><h2 class="h2">Cómo llegamos a estas cifras</h2><p class="note">El análisis siguió cinco etapas. Cada una deja una evidencia en el paquete del proyecto.</p></div>
+      <div class="ciclo">
+        <div><b>Recolectar</b><small>Agenda anotada en papel, 17 al 29 de agosto.</small></div>
+        <div><b>Organizar</b><small>Pasada a Excel: 40 citas, una fila por cita.</small></div>
+        <div><b>Limpiar</b><small>Seis errores corregidos, con el papel a la mano.</small></div>
+        <div><b>Analizar</b><small>Márgenes, días, canales y muestras por pregunta.</small></div>
+        <div><b>Visualizar</b><small>Este tablero y el informe para la dueña.</small></div>
+      </div>
+      <h3 class="h2" style="font-size:19px;margin:34px 0 12px">Errores de la agenda que se corrigieron</h3>
+      <ul class="cal">
+        <li><span class="tag">Error</span><div><b>“Rayitos”, “mechas” y “color” como tres servicios</b><small>Todo eso es “Color o mechas”. Si no, el color parecía pequeño.</small></div></li>
+        <li><span class="tag">Error</span><div><b>Citas que no llegaron sumadas con precio</b><small>Estado distinto, ingreso en cero. Si no, el sábado parecía más lleno.</small></div></li>
+        <li><span class="tag">Error</span><div><b>Una clienta escrita de dos formas</b><small>“Yus” y su nombre completo eran la misma persona.</small></div></li>
+        <li><span class="tag">Error</span><div><b>Costo del tinte igual al de un corte</b><small>El costo sale de lo que se compra, no del precio de lista.</small></div></li>
+        <li><span class="tag">Error</span><div><b>Domingo cerrado en la tabla</b><small>Un día sin abrir no es un día de cero ventas.</small></div></li>
+        <li><span class="tag">Error</span><div><b>Un corte de caballero anotado dos veces</b><small>Una cita, una fila: se contrastó con el papel.</small></div></li>
+      </ul>
+    </section>
+  </div>
 
   <p class="foot" id="foot"></p>
 </main>
@@ -278,6 +353,47 @@
   }
   ["desde", "hasta"].forEach(function (id) { $(id).addEventListener("change", function () { if (data) renderAll(); }); });
   $("todo").addEventListener("click", function () { $("desde").value = ""; $("hasta").value = ""; if (data) renderAll(); });
+  /* Pestañas */
+  var TABS = ["resumen", "preguntas", "calidad"];
+  function showTab(n) {
+    TABS.forEach(function (t) { $("p-" + t).hidden = t !== n; document.querySelector('.tabs [data-tab="' + t + '"]').setAttribute("aria-selected", t === n ? "true" : "false"); });
+    try { history.replaceState(null, "", "#" + n); } catch (e) {}
+  }
+  document.querySelector(".tabs").addEventListener("click", function (e) { var b = e.target.closest("[data-tab]"); if (b) showTab(b.dataset.tab); });
+
+  /* Preguntas */
+  function renderPreguntas() {
+    if (!A.n) { $("preg").innerHTML = '<p class="note">No hay citas en este periodo.</p>'; return; }
+    $("preg").innerHTML = DSA.preguntas(A, data.servicios).map(function (q) {
+      return '<article class="preg"><h3>' + esc(q.q) + '</h3><p class="resp">' + q.r + '</p><p class="muestra">Muestra: ' + q.m + '</p>' +
+        '<p class="vere ' + q.v + '">' + (q.v === "si" ? "Se puede afirmar" : "Todavía no se puede afirmar") + '</p><p class="note">' + q.n + "</p></article>";
+    }).join("");
+  }
+
+  /* Calidad (sobre toda la agenda) */
+  function renderCalidad() {
+    $("cal").innerHTML = DSA.calidad(data.citas, data.servicios).map(function (c) {
+      return '<li><span class="tag ' + c.nivel + '">' + (c.nivel === "ok" ? "Bien" : "Revisar") + "</span><div><b>" + esc(c.titulo) + "</b><small>" + esc(c.detalle) + "</small></div></li>";
+    }).join("");
+  }
+
+  /* Exportar la tabla limpia (sin nombres) para Power BI o Excel */
+  $("csv").addEventListener("click", function () {
+    if (!A || !A.n) { toast("No hay citas en este periodo para exportar."); return; }
+    var cab = ["ID", "Fecha", "Día", "Servicio", "Cómo llegó", "Tipo", "Estado", "Precio", "Costo insumos", "Ingreso", "Costo cobrado", "Margen"];
+    var q = function (v) { var t = String(v == null ? "" : v); return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+    var filas = A.rows.map(function (c) { var at = X.norm(c.estado) === "atendida", ing = at ? c.precio : 0, co = at ? c.costo : 0;
+      return [c.id, c.fecha, X.dayName(c.fecha), c.servicio, c.llegada, c.tipo, c.estado, c.precio, c.costo, ing, co, ing - co].map(q).join(","); });
+    var blob = new Blob(["\uFEFF" + cab.join(",") + "\n" + filas.join("\n") + "\n"], { type: "text/csv;charset=utf-8" });
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "datasmart-agenda-" + A.desde + "-a-" + A.hasta + ".csv";
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    toast("CSV descargado: " + A.n + " citas, sin nombres.");
+  });
+
+  /* Renderizado: se agregan las nuevas partes al cambio de periodo */
+  var _renderAll = renderAll;
+  renderAll = function () { _renderAll(); renderPreguntas(); renderCalidad(); };
+  var h0 = (location.hash || "").replace("#", ""); if (TABS.indexOf(h0) >= 0) showTab(h0);
   load();
 })();
 </script>

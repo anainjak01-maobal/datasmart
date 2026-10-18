@@ -1,6 +1,10 @@
 DATASMART · SITIO DE LA AGENDA (Peluquería Meylin)
 
 Qué hace
+- Pestaña Resumen: el margen, las lecturas de la agenda y los cuatro cambios para la semana siguiente.
+- Pestaña Preguntas: cuatro preguntas, cada una con su muestra y su veredicto ("se puede afirmar" o "todavía no").
+- Pestaña Calidad y método: revisiones automáticas de los datos, las cinco etapas del análisis y los errores corregidos.
+- Botón Descargar CSV: la agenda limpia, sin nombres, para abrir en Excel o Power BI.
 - Registrar una cita: servicio, cómo llegó, clienta nueva o que ya venía, y si llegó o no.
 - Tablero: margen por servicio, días de la semana, quién viene, quién no llega y cuatro cambios para la otra semana.
 - El precio y el costo salen de la hoja Servicios. Nadie los escribe en la cita.
