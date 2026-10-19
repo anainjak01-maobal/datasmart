@@ -17,5 +17,5 @@ window.DS_CONFIG = {
 
   /* OBLIGATORIO: dirección de la aplicación web de Apps Script (termina en /exec, ver LEEME.txt, paso 3).
      Sin esto, ni el tablero ni el registro de citas abren. */
-  REGISTRO: "https://script.google.com/macros/s/AKfycbxZ8bSYYBmVn3O02trIWhFvqZoBahaIQlVrHG4HMrcz5qi4i3OotOZDmNov2LGsUA_G6Q/exec"
+  REGISTRO: "https://script.google.com/macros/s/AKfycbzItrOhthkTJTgYKaDkolEeg8tBrZX-wHZn97ZuAMjyYZKzHzfMH6lDzKm2zpq07-Kx-A/exec"
 };
