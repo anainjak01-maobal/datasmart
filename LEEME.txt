@@ -13,6 +13,9 @@ QUÉ ES SOLO DEL EQUIPO (con clave)
 
 FLUJO DE UNA RESERVA
   1. La clienta llena reserva.html y envía por WhatsApp. La reserva queda como Pendiente en la hoja Solicitudes.
+  Una reserva puede tener varios servicios (ej. corte y uñas). Cada servicio se registra como una línea en Agenda,
+  con el mismo día, cómo llegó y estado, y su propio precio y costo.
+  En el tablero, "citas" cuenta servicios realizados, no visitas: una visita con dos servicios son dos citas.
   2. El equipo abre tablero.html > Solicitudes, responde por WhatsApp y marca:
      - Atendida / No llegó: registra la cita en Agenda con el precio y el costo de la hoja Servicios.
      - Cancelar: la reserva se cierra sin cita.

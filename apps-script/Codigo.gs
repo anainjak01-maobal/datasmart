@@ -92,13 +92,20 @@ function hojaSolicitudes(ss) {
 /* Reserva pública: queda como Pendiente hasta que el equipo la confirme. No guarda datos personales. */
 function registrarSolicitud(p) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var pedidos = (Array.isArray(p.servicios) ? p.servicios : [p.servicio]).map(function (n) { return String(n || "").trim(); }).filter(function (n) { return n; });
+  if (!pedidos.length) return { ok: false, error: "Elige al menos un servicio." };
+  if (pedidos.length > 6) return { ok: false, error: "Puedes reservar hasta 6 servicios en la misma visita." };
+  var nombresOk = [];
+  for (var s = 0; s < pedidos.length; s++) {
+    var svx = buscarServicio(ss, pedidos[s]);
+    if (!svx) return { ok: false, error: "Ese servicio no está disponible: " + pedidos[s] + "." };
+    if (nombresOk.indexOf(svx.nombre) < 0) nombresOk.push(svx.nombre);
+  }
   var fecha = String(p.fecha || "");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return { ok: false, error: "La fecha no es válida." };
   var hoy = hoyBogota();
   if (fecha < hoy) return { ok: false, error: "La fecha ya pasó. Elige un día de hoy en adelante." };
   if (fecha > Utilities.formatDate(new Date(Date.now() + 60 * 86400000), "America/Bogota", "yyyy-MM-dd")) return { ok: false, error: "Solo se puede reservar con 60 días de anticipación." };
-  var sv = buscarServicio(ss, p.servicio);
-  if (!sv) return { ok: false, error: "Ese servicio no está disponible." };
   var tipo = String(p.tipo || "").trim();
   if (CLIENTES.indexOf(tipo) < 0) return { ok: false, error: "Indica si es tu primera vez o si ya nos visitaste." };
 
@@ -106,7 +113,7 @@ function registrarSolicitud(p) {
   for (var k = 0; k < ids.length; k++) { var m = String(ids[k][0]).match(/^S(\d+)$/); if (m) max = Math.max(max, +m[1]); }
   var id = "S" + (max < 9 ? "0" : "") + (max + 1);
   var d = new Date(fecha + "T12:00:00"), fin = Math.max(h.getLastRow(), 1) + 1;
-  h.getRange(fin, 1, 1, SOL_CABECERA.length).setValues([[id, d, sv.nombre, tipo, "Pendiente", "", new Date()]]);
+  h.getRange(fin, 1, 1, SOL_CABECERA.length).setValues([[id, d, nombresOk.join(" + "), tipo, "Pendiente", "", new Date()]]);
   h.getRange(fin, 2).setNumberFormat("dd/mm/yyyy");
   return { ok: true, id: id };
 }
@@ -124,10 +131,19 @@ function atenderSolicitud(p) {
   if (!s) return { ok: false, error: "No encuentro la solicitud " + p.solicitud + "." };
   if (String(s.datos[4]) !== "Pendiente") return { ok: false, error: "La solicitud " + p.solicitud + " ya está " + s.datos[4] + "." };
   var f = s.datos[1] instanceof Date ? Utilities.formatDate(s.datos[1], "America/Bogota", "yyyy-MM-dd") : String(s.datos[1]);
-  var r = registrarCita({ fecha: f, servicio: s.datos[2], llegada: p.llegada || "WhatsApp", cliente: s.datos[3], estado: p.estado });
-  if (!r.ok) return r;
-  h.getRange(s.fila, 5, 1, 2).setValues([["Registrada", r.id]]);
-  return r;
+  var nombres = String(s.datos[2]).split(" + ");
+  for (var i = 0; i < nombres.length; i++) {
+    if (!buscarServicio(ss, nombres[i])) return { ok: false, error: "El servicio “" + nombres[i] + "” ya no está en la hoja Servicios." };
+  }
+  /* Una línea en Agenda por cada servicio de la visita */
+  var ids = [], precio = 0, costo = 0;
+  for (var j = 0; j < nombres.length; j++) {
+    var r = registrarCita({ fecha: f, servicio: nombres[j], llegada: p.llegada || "WhatsApp", cliente: s.datos[3], estado: p.estado });
+    if (!r.ok) return r;
+    ids.push(r.id); precio += r.precio; costo += r.costo;
+  }
+  h.getRange(s.fila, 5, 1, 2).setValues([["Registrada", ids.join(", ")]]);
+  return { ok: true, id: ids.join(", "), precio: precio, costo: costo, margen: precio - costo };
 }
 
 function cambiarSolicitud(p, estado) {

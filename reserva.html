@@ -83,7 +83,7 @@
 (function () {
   "use strict";
   var X = window.DS, $ = function (id) { return document.getElementById(id); };
-  var sel = { servicio: "", tipo: "" }, servicios = [];
+  var sel = { servicios: [], tipo: "" }, servicios = [];
   var hoy = X.today();
 
   $("negocio").textContent = X.CFG.NEGOCIO || "";
@@ -96,21 +96,25 @@
 
   function pintaServicios() {
     $("servicios").innerHTML = servicios.map(function (s) {
-      return '<button type="button" class="opc" data-s="' + X.esc(s.servicio) + '" aria-pressed="' + (sel.servicio === s.servicio ? "true" : "false") + '"><b>' + X.esc(s.servicio) + "</b><small>" + X.money(s.precio) + "</small></button>";
+      var on = sel.servicios.indexOf(s.servicio) >= 0;
+      return '<button type="button" class="opc" data-s="' + X.esc(s.servicio) + '" aria-pressed="' + (on ? "true" : "false") + '"><b>' + X.esc(s.servicio) + "</b><small>" + X.money(s.precio) + "</small></button>";
     }).join("");
   }
   function pintaTipo() {
     document.querySelectorAll("#tipo button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.v === sel.tipo ? "true" : "false"); });
   }
   function resumen() {
-    var s = precioDe(sel.servicio);
-    $("res-t").textContent = s ? X.money(s.precio) : "Elige un servicio";
-    $("res-n").textContent = s ? "Precio de " + s.servicio + ". Lo pagas al llegar." : "";
+    var total = 0, nombres = [];
+    sel.servicios.forEach(function (n) { var s = precioDe(n); if (s) { total += s.precio; nombres.push(s.servicio); } });
+    $("res-t").textContent = nombres.length ? X.money(total) : "Elige un servicio";
+    $("res-n").textContent = nombres.length ? (nombres.length === 1 ? "Precio de " + nombres[0] : nombres.length + " servicios: " + nombres.join(", ")) + ". Lo pagas al llegar." : "";
   }
 
   $("servicios").addEventListener("click", function (e) {
     var b = e.target.closest("button[data-s]"); if (!b) return;
-    sel.servicio = b.dataset.s; pintaServicios(); resumen();
+    var n = b.dataset.s, k = sel.servicios.indexOf(n);
+    if (k >= 0) sel.servicios.splice(k, 1); else sel.servicios.push(n);
+    pintaServicios(); resumen();
   });
   $("tipo").addEventListener("click", function (e) {
     var b = e.target.closest("button[data-v]"); if (!b) return;
@@ -118,7 +122,7 @@
   });
 
   function validar() {
-    if (!sel.servicio) return "Elige el servicio.";
+    if (!sel.servicios.length) return "Elige al menos un servicio.";
     if (!$("fecha").value) return "Elige el día.";
     if ($("fecha").value < hoy) return "Elige un día de hoy en adelante.";
     if (!sel.tipo) return "Dinos si es tu primera vez o si ya nos visitaste.";
@@ -126,7 +130,7 @@
   }
   function textoReserva(id) {
     var f = X.dayName($("fecha").value) + " " + X.fmtDate($("fecha").value);
-    return "Hola, quiero reservar " + sel.servicio + " para el " + f + ". " +
+    return "Hola, quiero reservar " + sel.servicios.join(" y ") + " para el " + f + ". " +
       (sel.tipo === "Nueva" ? "Es mi primera vez." : "Ya nos he visitado antes.") + (id ? " (Reserva " + id + ")" : "");
   }
 
@@ -134,7 +138,7 @@
     var err = validar(); if (err) { $("msg").textContent = err; return; }
     $("msg").textContent = "";
     var b = $("enviar"); b.disabled = true; b.textContent = "Enviando…";
-    X.enviarSolicitud({ servicio: sel.servicio, fecha: $("fecha").value, tipo: sel.tipo }).then(function (r) {
+    X.enviarSolicitud({ servicios: sel.servicios, fecha: $("fecha").value, tipo: sel.tipo }).then(function (r) {
       if (!X.CFG.WHATSAPP) { b.disabled = false; b.textContent = "Enviar reserva por WhatsApp"; $("msg").textContent = "La reserva por WhatsApp todavía no está configurada. Avisa al negocio."; return; }
       var id = r && r.ok ? r.id : "";
       if (!id) toast("No pudimos guardar la reserva en línea. Te escribimos por WhatsApp igual.");
