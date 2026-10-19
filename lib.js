@@ -39,6 +39,7 @@
 
   var ALIAS = {
     servicios: { servicio: ["servicio"], precio: ["precio"], costo: ["costo insumos", "costo"] },
+    solicitudes: { id: ["id"], fecha: ["fecha pedida", "fecha"], servicio: ["servicio"], tipo: ["tipo"], estado: ["estado"], cita: ["cita"] },
     agenda: { id: ["id"], fecha: ["fecha"], servicio: ["servicio"], llegada: ["como llego"], tipo: ["tipo"], estado: ["estado"], precio: ["precio"], costo: ["costo insumos", "costo"] }
   };
   function findCol(headers, aliases) {
@@ -51,7 +52,7 @@
     if (rows.length < 2) return { rows: [], missing: [] };
     var headers = rows[0].map(norm), map = {}, missing = [];
     Object.keys(ALIAS[kind]).forEach(function (k) { map[k] = findCol(headers, ALIAS[kind][k]); });
-    var required = kind === "servicios" ? ["servicio", "precio"] : ["fecha", "servicio", "estado", "precio"];
+    var required = kind === "servicios" ? ["servicio", "precio"] : kind === "solicitudes" ? ["fecha", "servicio", "estado"] : ["fecha", "servicio", "estado", "precio"];
     required.forEach(function (k) { if (map[k] < 0) missing.push(ALIAS[kind][k][0]); });
     var out = rows.slice(1).map(function (r) {
       var o = {}; Object.keys(map).forEach(function (k) { o[k] = map[k] >= 0 ? String(r[map[k]] == null ? "" : r[map[k]]).trim() : ""; }); return o;
@@ -122,12 +123,40 @@
           return t;
         });
     }
-    return Promise.all([get("servicios"), get("agenda")]).then(function (t) {
-      var a = toObjects("servicios", t[0]), b = toObjects("agenda", t[1]), avisos = [];
+    return Promise.all([get("servicios"), get("agenda"), get("solicitudes")]).then(function (t) {
+      var a = toObjects("servicios", t[0]), b = toObjects("agenda", t[1]), c = toObjects("solicitudes", t[2]), avisos = [];
       [["Servicios", a], ["Agenda", b]].forEach(function (x) { if (x[1].missing.length) avisos.push("En la hoja " + x[0] + " no encuentro la columna: " + x[1].missing.join(", ") + "."); });
       claveActual = clave;
-      return { servicios: cleanServicios(a.rows), citas: cleanCitas(b.rows), modo: "hojas", avisos: avisos };
+      return { servicios: cleanServicios(a.rows), citas: cleanCitas(b.rows), solicitudes: c.rows, modo: "hojas", avisos: avisos };
     });
+  }
+
+  /* Pública: lista de servicios y precios (sin costos). */
+  function loadServicios() {
+    var R = CFG.REGISTRO;
+    if (!R) return Promise.reject(new Error("sinregistro"));
+    var sep = R.indexOf("?") < 0 ? "?" : "&";
+    return fetch(R + sep + "servicios=1&t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("red"); return r.text(); })
+      .then(function (t) { if (/^\s*\{/.test(t)) throw new Error("red"); return { servicios: cleanServicios(toObjects("servicios", t).rows) }; });
+  }
+
+  /* Reserva pública: el script la guarda como Pendiente. Devuelve { ok, id } o { ok:false, error }. */
+  function enviarSolicitud(payload) {
+    if (!CFG.REGISTRO) return Promise.resolve({ ok: false, sinConfig: true });
+    payload.accion = "solicitud";
+    return fetch(CFG.REGISTRO, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
+      .then(function (r) { return r.text(); }).then(function (t) { return JSON.parse(t); })
+      .catch(function () { return { ok: false, error: "No se pudo guardar la reserva." }; });
+  }
+
+  /* Acciones del equipo sobre una reserva: "atender" (con estado Atendida / No llegó) o "cancelar". */
+  function solicitudAccion(accion, payload) {
+    if (!CFG.REGISTRO) return Promise.resolve({ ok: false, error: "Falta REGISTRO en config.js." });
+    payload.accion = accion; payload.clave = claveActual;
+    return fetch(CFG.REGISTRO, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
+      .then(function (r) { return r.text(); }).then(function (t) { return JSON.parse(t); })
+      .catch(function () { return { ok: false, error: "No se pudo conectar. Intenta de nuevo." }; });
   }
 
   /* Muestra #contenido solo con la clave correcta. onOk(datos) se llama al entrar. */
@@ -156,5 +185,5 @@
     else pedir("");
   }
 
-  w.DS = { loadEquipo: loadEquipo, acceso: acceso, norm: norm, esc: esc, money: money, toNum: toNum, sum: sum, today: today, parseDate: parseDate, fmtDate: fmtDate, dayName: dayName, addDays: addDays, ORDEN: ORDEN, parseCSV: parseCSV, loadData: loadData, registrar: registrar, CFG: CFG };
+  w.DS = { loadEquipo: loadEquipo, loadServicios: loadServicios, enviarSolicitud: enviarSolicitud, solicitudAccion: solicitudAccion, acceso: acceso, norm: norm, esc: esc, money: money, toNum: toNum, sum: sum, today: today, parseDate: parseDate, fmtDate: fmtDate, dayName: dayName, addDays: addDays, ORDEN: ORDEN, parseCSV: parseCSV, loadData: loadData, registrar: registrar, CFG: CFG };
 })(window);

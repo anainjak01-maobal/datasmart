@@ -1,59 +1,68 @@
 DATASMART · SITIO DE LA AGENDA (Peluquería Meylin)
 ==================================================
 
-QUÉ HAY Y QUIÉN LO USA
-  Todo el sitio es SOLO DEL EQUIPO. Está protegido con una clave.
-  - Registrar cita (index.html): anotar cada cita (servicio, cómo llegó, clienta nueva o que ya venía,
-    atendida o no llegó). El precio y el costo salen de la hoja Servicios.
-  - Tablero (tablero.html): resumen, estadística, preguntas, calidad y método, y descarga de la agenda limpia (sin nombres).
-    Estadística: distribución del ingreso por cita (mediana, cuartiles, intervalo del promedio por bootstrap),
-    tendencia semanal, tasas de no llegada por canal y tipo de clienta con intervalo de Wilson y prueba de Fisher,
-    y reparto del ingreso por servicio (Pareto). Cada número trae su tamaño de muestra.
-  Ninguna clienta necesita entrar al sitio. Por eso no se comparte ningún enlace con clientes.
+QUÉ COMPARTIR CON LAS CLIENTAS
+  https://TU-USUARIO.github.io/datasmart/reserva.html
+  Solo muestra servicios y precios. La clienta elige servicio, día y si es su primera vez,
+  y al enviar queda una reserva pendiente y se abre WhatsApp con el mensaje.
+
+QUÉ ES SOLO DEL EQUIPO (con clave)
+  - index.html   Registrar cita: para anotar una cita directa (llegó sin reserva, vecina, etc.).
+  - tablero.html Tablero: Resumen, Estadística, Solicitudes (reservas pendientes), Preguntas, Calidad y método.
+  No compartas estos dos enlaces con clientas.
+
+FLUJO DE UNA RESERVA
+  1. La clienta llena reserva.html y envía por WhatsApp. La reserva queda como Pendiente en la hoja Solicitudes.
+  2. El equipo abre tablero.html > Solicitudes, responde por WhatsApp y marca:
+     - Atendida / No llegó: registra la cita en Agenda con el precio y el costo de la hoja Servicios.
+     - Cancelar: la reserva se cierra sin cita.
+  3. El estado de cada reserva queda en la hoja Solicitudes (Pendiente, Registrada o Cancelada).
 
 PRIVACIDAD
-  - El sitio no pide nombres de clientas. La hoja Agenda no debe tener nombres.
-  - Los nombres, si se llevan, quedan en el cuaderno o en un Excel privado.
-  - No publiques las hojas en la web: el acceso es solo por la clave a través del script.
+  - Las reservas no piden nombre: solo servicio, día y si es nueva o ya venía.
+  - La hoja Agenda y la hoja Solicitudes no deben tener nombres de clientas.
+  - No publiques las hojas en la web: el acceso es por el script.
 
 PASO 1. Hoja de Google
   1. Abre datasmart-datos.xlsx en Google Drive y elige Archivo > Importar, o súbelo y ábrelo con Google Sheets.
-  2. Deben quedar las hojas Servicios y Agenda con esos nombres exactos (las demás pestañas no se usan aquí).
-  3. NO publicar en la web ninguna hoja. Si ya la publicaste: Archivo > Compartir > Publicar en la web > Dejar de publicar.
+  2. Deben quedar las hojas Servicios y Agenda con esos nombres exactos.
+  3. La hoja Solicitudes se crea sola la primera vez que llega una reserva.
+  4. NO publicar en la web ninguna hoja. Si ya la publicaste: Archivo > Compartir > Publicar en la web > Dejar de publicar.
 
 PASO 2. Clave del equipo (en el script)
-  Abre Extensiones > Apps Script, pega el contenido de apps-script/Codigo.gs y en la línea
+  Abre Extensiones > Apps Script, pega el contenido de apps-script/Codigo.gs y cambia
       var CLAVE = "cambia-esta-clave";
-  cambia el texto por una clave que solo conozca el equipo (ej. "Meylin2026-equipo"). Guarda.
+  por una clave que solo conozca el equipo. Guarda.
 
-PASO 3. Registro y lectura automática (Apps Script)
-  1. Guarda (disco). Luego Implementar > Nueva implementación > tipo "Aplicación web".
+PASO 3. Script de Google
+  1. Guarda (disco). Implementar > Nueva implementación > tipo "Aplicación web".
   2. Ejecutar como: Yo. Quién tiene acceso: Cualquier persona. Implementar y autorizar con tu cuenta.
   3. Copia la URL que termina en /exec y pégala en config.js, en REGISTRO. Sube config.js a GitHub.
-  4. Prueba: abre esa URL en el navegador. Debe aparecer {"ok":true,...}. Eso NO muestra datos: es normal.
-  Si cambias la clave o el script, haz una versión nueva:
-  Implementar > Administrar implementaciones > editar > Versión nueva > Implementar.
+  4. Si ya tenías el script implementado: Implementar > Administrar implementaciones > editar > Versión nueva > Implementar.
+     La URL /exec no cambia.
 
-PASO 4. Subir el sitio a GitHub Pages
-  1. En GitHub crea un repositorio PÚBLICO (ej. datasmart) y sube todos los archivos de esta carpeta.
+PASO 4. WhatsApp del negocio
+  En config.js, escribe el número en WHATSAPP con indicativo y sin + ni espacios (ej. "573123686649").
+
+PASO 5. Subir el sitio a GitHub Pages
+  1. Crea un repositorio PÚBLICO (ej. datasmart) y sube todos los archivos de esta carpeta.
   2. Settings > Pages > Deploy from a branch > main / root.
-  3. El sitio queda en https://TU-USUARIO.github.io/datasmart/
-     - Registrar cita: .../datasmart/index.html
-     - Tablero:        .../datasmart/tablero.html
+  3. Sitio: https://TU-USUARIO.github.io/datasmart/
+     - Reserva para clientas: .../datasmart/reserva.html
+     - Registrar cita (equipo): .../datasmart/index.html
+     - Tablero (equipo):        .../datasmart/tablero.html
 
 CÓMO ENTRA EL EQUIPO
   - La primera vez escribe la clave; el navegador la recuerda en ese dispositivo.
-  - Botón "Salir" (arriba a la derecha) borra la clave guardada en ese navegador.
-  - Si la clave no coincide, la pantalla lo dice. Si falta REGISTRO en config.js, la pantalla lo indica.
+  - Botón "Salir" borra la clave guardada en ese navegador.
 
 CÓMO SE CAMBIA UN SERVICIO O UN PRECIO
-  - En la hoja Servicios: se cambia el precio o el costo. El sitio lo toma en la siguiente carga.
+  - En la hoja Servicios: se cambia el precio o el costo. La reserva lo toma en la siguiente carga.
   - Un servicio nuevo se agrega al final de la hoja Servicios.
 
 LÍMITES QUE CONVIENE SABER
-  - La clave es compartida y sencilla: sirve para que el público no vea nada, no para una seguridad fuerte.
-    Si se filtra, cámbiala en Codigo.gs y haz una versión nueva.
-  - Sin REGISTRO en config.js el sitio no abre (ya no hay datos de demostración para el equipo).
-  - GitHub Pages es público: el código se puede leer, pero no contiene datos ni la clave.
+  - La clave es compartida y sencilla: protege los datos, no es una seguridad fuerte.
+  - Cualquiera puede enviar una reserva de prueba (la reserva pública no pide clave). Si llegan reservas falsas,
+    se cancelan desde Solicitudes.
+  - Sin REGISTRO en config.js, la reserva y el tablero no funcionan.
   - No mide cuánto dura cada servicio, así que no hay margen por hora de silla.
-  - No confirma citas por WhatsApp; solo registra si llegó.

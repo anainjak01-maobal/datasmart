@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reserva tu cita · DataSmart</title>
+<link rel="stylesheet" href="datasmart.css?v=2">
+<style>
+  .res-main { max-width: 760px; margin: 0 auto; padding: 36px 20px 60px; }
+  .res-h { font: 700 34px/1.1 var(--f-display); letter-spacing: -.02em; color: var(--ink); margin: 0; }
+  .res-lede { margin: 10px 0 0; color: var(--muted); }
+  .res-paso { margin-top: 30px; }
+  .res-paso h2 { font: 700 18px var(--f-display); color: var(--ink); margin: 0 0 12px; }
+  .opc-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .seg { display: flex; gap: 10px; flex-wrap: wrap; }
+  .opc, .seg button {
+    font: inherit; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px; text-align: left; cursor: pointer; display: grid; gap: 2px;
+  }
+  .opc b, .seg button { font-weight: 600; font-size: 16px; }
+  .opc small { color: var(--muted); font-size: 14px; }
+  .opc[aria-pressed="true"], .seg button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+  .res-fecha { font: inherit; font-size: 16px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); }
+  .res-resumen { margin-top: 26px; padding: 18px 0 0; border-top: 1px solid var(--line); display: grid; gap: 6px; }
+  .res-resumen b { font: 700 26px var(--f-display); color: var(--ink); }
+  .res-resumen p { margin: 0; color: var(--muted); font-size: 15px; }
+  .res-btn { margin-top: 18px; width: 100%; font: 700 17px var(--f-body); padding: 15px 18px; border: 0; border-radius: 10px; background: #14161a; color: #fff; cursor: pointer; }
+  .res-btn:disabled { opacity: .55; cursor: default; }
+  .res-msg { min-height: 1.4em; color: #b42318; font-size: 15px; margin-top: 10px; }
+  .res-aviso { margin-top: 26px; font-size: 14.5px; color: var(--muted); }
+  .res-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #14161a; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 15px; max-width: calc(100% - 40px); }
+  .res-toast[hidden] { display: none; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="reserva.html" aria-label="DataSmart, reservas">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="13" cy="13" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M20 20l7 7" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><path d="M8.5 16v-2.5M13 16v-5M17.5 16v-8" stroke="#2f5bff" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <b>DataSmart</b><span id="negocio"></span>
+    </a>
+  </div>
+</header>
+
+<main class="res-main">
+  <h1 class="res-h">Reserva tu cita</h1>
+  <p class="res-lede">Elige el servicio, el día y si es tu primera vez. Enviamos la reserva por WhatsApp y te confirmamos por ahí.</p>
+
+  <section class="res-paso" aria-labelledby="h-serv">
+    <h2 id="h-serv">1. Elige el servicio</h2>
+    <div class="opc-grid" id="servicios"><p class="res-lede">Cargando servicios…</p></div>
+  </section>
+
+  <section class="res-paso" aria-labelledby="h-dia">
+    <h2 id="h-dia">2. Elige el día</h2>
+    <input class="res-fecha" id="fecha" type="date" aria-label="Día de la cita">
+  </section>
+
+  <section class="res-paso" aria-labelledby="h-tipo">
+    <h2 id="h-tipo">3. ¿Es tu primera vez?</h2>
+    <div class="seg" id="tipo">
+      <button type="button" data-v="Nueva" aria-pressed="false">Sí, es mi primera vez</button>
+      <button type="button" data-v="Ya venía" aria-pressed="false">Ya nos visité antes</button>
+    </div>
+  </section>
+
+  <div class="res-resumen" aria-live="polite">
+    <span class="res-lede">Precio del servicio</span>
+    <b id="res-t">Elige un servicio</b>
+    <p id="res-n"></p>
+  </div>
+
+  <button class="res-btn" id="enviar" type="button">Enviar reserva por WhatsApp</button>
+  <p class="res-msg" id="msg" role="status"></p>
+  <p class="res-aviso">Tu reserva queda pendiente hasta que te confirmemos la hora por WhatsApp.</p>
+</main>
+
+<div class="res-toast" id="toast" role="status" hidden></div>
+
+<script src="config.js?v=2"></script>
+<script src="lib.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var X = window.DS, $ = function (id) { return document.getElementById(id); };
+  var sel = { servicio: "", tipo: "" }, servicios = [];
+  var hoy = X.today();
+
+  $("negocio").textContent = X.CFG.NEGOCIO || "";
+  $("fecha").min = hoy;
+  $("fecha").max = X.addDays(hoy, 60);
+  $("fecha").value = "";
+
+  function toast(t) { var e = $("toast"); e.textContent = t; e.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(function () { e.hidden = true; }, 3400); }
+  function precioDe(n) { return servicios.filter(function (s) { return s.servicio === n; })[0]; }
+
+  function pintaServicios() {
+    $("servicios").innerHTML = servicios.map(function (s) {
+      return '<button type="button" class="opc" data-s="' + X.esc(s.servicio) + '" aria-pressed="' + (sel.servicio === s.servicio ? "true" : "false") + '"><b>' + X.esc(s.servicio) + "</b><small>" + X.money(s.precio) + "</small></button>";
+    }).join("");
+  }
+  function pintaTipo() {
+    document.querySelectorAll("#tipo button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.v === sel.tipo ? "true" : "false"); });
+  }
+  function resumen() {
+    var s = precioDe(sel.servicio);
+    $("res-t").textContent = s ? X.money(s.precio) : "Elige un servicio";
+    $("res-n").textContent = s ? "Precio de " + s.servicio + ". Lo pagas al llegar." : "";
+  }
+
+  $("servicios").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-s]"); if (!b) return;
+    sel.servicio = b.dataset.s; pintaServicios(); resumen();
+  });
+  $("tipo").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-v]"); if (!b) return;
+    sel.tipo = b.dataset.v; pintaTipo();
+  });
+
+  function validar() {
+    if (!sel.servicio) return "Elige el servicio.";
+    if (!$("fecha").value) return "Elige el día.";
+    if ($("fecha").value < hoy) return "Elige un día de hoy en adelante.";
+    if (!sel.tipo) return "Dinos si es tu primera vez o si ya nos visitaste.";
+    return "";
+  }
+  function textoReserva(id) {
+    var f = X.dayName($("fecha").value) + " " + X.fmtDate($("fecha").value);
+    return "Hola, quiero reservar " + sel.servicio + " para el " + f + ". " +
+      (sel.tipo === "Nueva" ? "Es mi primera vez." : "Ya nos he visitado antes.") + (id ? " (Reserva " + id + ")" : "");
+  }
+
+  $("enviar").addEventListener("click", function () {
+    var err = validar(); if (err) { $("msg").textContent = err; return; }
+    $("msg").textContent = "";
+    var b = $("enviar"); b.disabled = true; b.textContent = "Enviando…";
+    X.enviarSolicitud({ servicio: sel.servicio, fecha: $("fecha").value, tipo: sel.tipo }).then(function (r) {
+      if (!X.CFG.WHATSAPP) { b.disabled = false; b.textContent = "Enviar reserva por WhatsApp"; $("msg").textContent = "La reserva por WhatsApp todavía no está configurada. Avisa al negocio."; return; }
+      var id = r && r.ok ? r.id : "";
+      if (!id) toast("No pudimos guardar la reserva en línea. Te escribimos por WhatsApp igual.");
+      location.href = "https://wa.me/" + X.CFG.WHATSAPP + "?text=" + encodeURIComponent(textoReserva(id));
+    });
+  });
+
+  X.loadServicios().then(function (d) {
+    servicios = d.servicios; pintaServicios(); resumen();
+  }, function () {
+    $("servicios").innerHTML = '<p class="res-lede">No pudimos cargar los servicios. Intenta de nuevo en unos minutos.</p>';
+  });
+})();
+</script>
+</body>
+</html>

@@ -79,3 +79,7 @@ section.block > .head { display: grid; gap: 6px; margin-bottom: 26px; }
 .est-barra i { display: block; height: 100%; background: var(--accent); }
 .est .vere { font: 600 15px var(--f-body); margin: 8px 0 0; color: var(--ink-2); }
 .est .vere.si { color: var(--accent); }
+
+/* Reservas pendientes */
+.sol-acc { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.sol-acc button:disabled { opacity: .5; cursor: default; }

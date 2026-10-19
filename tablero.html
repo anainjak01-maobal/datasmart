@@ -178,6 +178,7 @@
   <nav class="tabs" role="tablist" aria-label="Secciones">
     <button type="button" role="tab" data-tab="resumen" aria-selected="true">Resumen</button>
     <button type="button" role="tab" data-tab="estadistica" aria-selected="false">Estadística</button>
+    <button type="button" role="tab" data-tab="solicitudes" aria-selected="false">Solicitudes <span id="sol-cuenta"></span></button>
     <button type="button" role="tab" data-tab="preguntas" aria-selected="false">Preguntas</button>
     <button type="button" role="tab" data-tab="calidad" aria-selected="false">Calidad y método</button>
   </nav>
@@ -230,6 +231,13 @@
     <section class="block" style="border-top:0;padding-top:34px">
       <div class="head"><h2 class="h2">Estadística de la agenda</h2><p class="note">Cada número trae su tamaño de muestra. Con pocas citas, los intervalos son anchos y las diferencias pueden ser azar. Se calcula con el periodo elegido arriba.</p></div>
       <div id="est"></div>
+    </section>
+  </div>
+
+  <div class="panel" id="p-solicitudes" hidden>
+    <section class="block" style="border-top:0;padding-top:34px">
+      <div class="head"><h2 class="h2">Reservas pendientes</h2><p class="note">Llegan desde la página de reserva para clientes, con la clienta anotada como nueva o que ya venía. Al confirmar, se registra la cita real con su precio y costo.</p></div>
+      <div id="sol"></div>
     </section>
   </div>
 
@@ -375,7 +383,7 @@
   ["desde", "hasta"].forEach(function (id) { $(id).addEventListener("change", function () { if (data) renderAll(); }); });
   $("todo").addEventListener("click", function () { $("desde").value = ""; $("hasta").value = ""; if (data) renderAll(); });
   /* Pestañas */
-  var TABS = ["resumen", "estadistica", "preguntas", "calidad"];
+  var TABS = ["resumen", "estadistica", "solicitudes", "preguntas", "calidad"];
   function showTab(n) {
     TABS.forEach(function (t) { $("p-" + t).hidden = t !== n; document.querySelector('.tabs [data-tab="' + t + '"]').setAttribute("aria-selected", t === n ? "true" : "false"); });
     try { history.replaceState(null, "", "#" + n); } catch (e) {}
@@ -438,6 +446,32 @@
     root.innerHTML = h;
   }
 
+  /* Reservas pendientes */
+  function renderSolicitudes() {
+    var root = $("sol"); if (!root || !data) return;
+    var lista = (data.solicitudes || []).filter(function (s) { return X.norm(s.estado) === "pendiente"; })
+      .sort(function (a, b) { return a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0; });
+    $("sol-cuenta").textContent = lista.length ? "(" + lista.length + ")" : "";
+    if (!lista.length) { root.innerHTML = '<p class="note">No hay reservas pendientes. Cuando una clienta reserve por el enlace, aparecerá aquí.</p>'; return; }
+    root.innerHTML = lista.map(function (s) {
+      return '<article class="est" data-id="' + esc(s.id) + '"><h3>' + esc(s.servicio) + " · " + X.dayName(s.fecha) + " " + X.fmtDate(s.fecha) + '</h3>' +
+        '<p class="muestra">Reserva ' + esc(s.id) + " · " + (X.norm(s.tipo) === "nueva" ? "clienta nueva" : "ya venía") + '</p>' +
+        '<div class="sol-acc"><button class="btn sm" type="button" data-acc="Atendida">Atendida</button>' +
+        '<button class="btn line sm" type="button" data-acc="No llegó">No llegó</button>' +
+        '<button class="btn line sm" type="button" data-acc="cancelar">Cancelar</button></div></article>';
+    }).join("");
+  }
+  $("sol").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-acc]"); if (!b) return;
+    var card = b.closest("[data-id]"), id = card.dataset.id, acc = b.dataset.acc;
+    card.querySelectorAll("button").forEach(function (x) { x.disabled = true; });
+    var p = acc === "cancelar" ? X.solicitudAccion("cancelar", { solicitud: id }) : X.solicitudAccion("atender", { solicitud: id, estado: acc, llegada: "WhatsApp" });
+    p.then(function (r) {
+      if (r.ok) { toast(acc === "cancelar" ? "Reserva cancelada." : "Cita " + r.id + " registrada."); setTimeout(function () { location.reload(); }, 800); }
+      else { card.querySelectorAll("button").forEach(function (x) { x.disabled = false; }); toast(r.error || "No se pudo guardar."); }
+    });
+  });
+
   /* Preguntas */
   function renderPreguntas() {
     if (!A.n) { $("preg").innerHTML = '<p class="note">No hay citas en este periodo.</p>'; return; }
@@ -469,7 +503,7 @@
 
   /* Renderizado: se agregan las nuevas partes al cambio de periodo */
   var _renderAll = renderAll;
-  renderAll = function () { _renderAll(); renderPreguntas(); renderCalidad(); renderEstadistica(); };
+  renderAll = function () { _renderAll(); renderPreguntas(); renderCalidad(); renderEstadistica(); renderSolicitudes(); };
   var h0 = (location.hash || "").replace("#", ""); if (TABS.indexOf(h0) >= 0) showTab(h0);
   X.acceso(function (d) { load(d); });
 })();

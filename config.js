@@ -12,6 +12,9 @@ window.DS_CONFIG = {
     agenda: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXaWGxfXQ7LxKnErJvYiIR25yRmjwUcHL8hON2Xe8fjQbhb5nZ-QMdrWOrye2X6cpqbtczj08n3JCp/pub?gid=2016744713&single=true&output=csv"
   },
 
+  /* WhatsApp del negocio para que la clienta envíe su reserva: indicativo + número, sin + ni espacios (ej. "573001234567"). */
+  WHATSAPP: "",
+
   /* OBLIGATORIO: dirección de la aplicación web de Apps Script (termina en /exec, ver LEEME.txt, paso 3).
      Sin esto, ni el tablero ni el registro de citas abren. */
   REGISTRO: ""
