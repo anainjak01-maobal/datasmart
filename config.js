@@ -13,9 +13,9 @@ window.DS_CONFIG = {
   },
 
   /* WhatsApp del negocio para que la clienta envíe su reserva: indicativo + número, sin + ni espacios (ej. "573001234567"). */
-  WHATSAPP: "",
+  WHATSAPP: "573003304886",
 
   /* OBLIGATORIO: dirección de la aplicación web de Apps Script (termina en /exec, ver LEEME.txt, paso 3).
      Sin esto, ni el tablero ni el registro de citas abren. */
-  REGISTRO: ""
+  REGISTRO: "https://script.google.com/macros/s/AKfycbwjTxUw0NCv4AnupEZUuE2hJrqtnnCAGSutYoPe39vagAiASyYLUB3aHrB0oCqG3WOPMw/exec"
 };
