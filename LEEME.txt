@@ -40,6 +40,9 @@ PASO 3. Script de Google
   3. Copia la URL que termina en /exec y pégala en config.js, en REGISTRO. Sube config.js a GitHub.
   4. Si ya tenías el script implementado: Implementar > Administrar implementaciones > editar > Versión nueva > Implementar.
      La URL /exec no cambia.
+     IMPORTANTE: si pegaste el código nuevo y no creaste una Versión nueva, la reserva no carga los servicios.
+     Prueba: abre la URL /exec seguida de ?servicios=1 (ej. .../exec?servicios=1). Debe mostrar una lista
+     "Servicio,Precio". Si muestra {"ok":true,...}, falta la Versión nueva.
 
 PASO 4. WhatsApp del negocio
   En config.js, escribe el número en WHATSAPP con indicativo y sin + ni espacios (ej. "573123686649").

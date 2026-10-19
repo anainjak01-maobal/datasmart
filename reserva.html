@@ -144,8 +144,13 @@
 
   X.loadServicios().then(function (d) {
     servicios = d.servicios; pintaServicios(); resumen();
-  }, function () {
-    $("servicios").innerHTML = '<p class="res-lede">No pudimos cargar los servicios. Intenta de nuevo en unos minutos.</p>';
+  }, function (err) {
+    var m = err && err.message;
+    var txt = m === "sinregistro" ? "Falta conectar el script en config.js (REGISTRO)."
+      : m === "version" ? "El script de Google todavía no tiene la versión nueva. En Apps Script: Implementar > Administrar implementaciones > editar > Versión nueva > Implementar."
+      : m === "hoja" ? "No encuentro la hoja Servicios con las columnas Servicio y Precio."
+      : "No pudimos cargar los servicios. Intenta de nuevo en unos minutos.";
+    $("servicios").innerHTML = '<p class="res-lede">' + X.esc(txt) + '</p>';
   });
 })();
 </script>

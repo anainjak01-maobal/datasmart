@@ -138,7 +138,12 @@
     var sep = R.indexOf("?") < 0 ? "?" : "&";
     return fetch(R + sep + "servicios=1&t=" + Date.now(), { cache: "no-store" })
       .then(function (r) { if (!r.ok) throw new Error("red"); return r.text(); })
-      .then(function (t) { if (/^\s*\{/.test(t)) throw new Error("red"); return { servicios: cleanServicios(toObjects("servicios", t).rows) }; });
+      .then(function (t) {
+        if (/^\s*\{/.test(t)) throw new Error("version");
+        var a = toObjects("servicios", t);
+        if (a.missing.length || !a.rows.length) throw new Error("hoja");
+        return { servicios: cleanServicios(a.rows) };
+      });
   }
 
   /* Reserva pública: el script la guarda como Pendiente. Devuelve { ok, id } o { ok:false, error }. */
