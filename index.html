@@ -53,10 +53,23 @@ form.reg { margin-top: 8px; display: grid; }
       <b>DataSmart</b><span id="negocio">Peluquería Meylin · Maicao</span>
     </a>
     <nav class="nav" aria-label="Principal"><a href="index.html" aria-current="page">Registrar cita</a><a href="tablero.html">Tablero</a></nav>
+    <button class="salir" id="salir" type="button" hidden>Salir</button>
   </div>
 </header>
 
-<main class="wrap">
+<section class="acceso" id="acceso" aria-labelledby="acc-h">
+  <div class="acceso-in">
+    <h1 id="acc-h">Acceso del equipo</h1>
+    <p>Esta página es para registrar citas y es solo del equipo. Escribe la clave para entrar; el navegador la recuerda en este dispositivo.</p>
+    <form id="acc-form" class="acc-form">
+      <label for="clave">Clave del equipo</label>
+      <input id="clave" type="password" autocomplete="current-password" required>
+      <button class="btn" type="submit" id="acc-btn">Entrar</button>
+    </form>
+    <p class="acc-msg" id="acc-msg" role="status"></p>
+  </div>
+</section>
+<main class="wrap" id="contenido" hidden>
   <section class="block" style="border-top:0;padding-top:40px">
     <h1 class="h1">Registrar una cita</h1>
     <p class="lede" style="margin-top:10px">Una cita por vez. Elige el servicio y cómo llegó la clienta. El precio y el costo salen de la lista de servicios, no se escriben a mano.</p>
@@ -198,7 +211,7 @@ form.reg { margin-top: 8px; display: grid; }
   $("fecha").max = X.today(); $("fecha").value = X.today();
   $("fecha").addEventListener("change", function () { pintaHoy(); });
 
-  X.loadData().then(function (d) {
+  X.acceso(function (d) {
     data = d;
     var av = d.avisos.slice();
     if (d.modo === "demo" && !d.avisos.length) av.push("Modo de demostración: se muestran datos de ejemplo y las citas no se guardan todavía.");

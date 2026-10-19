@@ -9,15 +9,38 @@ var CLIENTES = ["Nueva", "Ya venía"];
 var ESTADOS = ["Atendida", "No llegó"];
 var DIAS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
-function doGet() {
-  return salida({ ok: true, mensaje: "Registro de DataSmart activo." });
+/* Clave del equipo: la usan el tablero, el registro de citas y la lectura de las hojas.
+   CAMBIARLA antes de implementar. */
+var CLAVE = "cambia-esta-clave";
+
+/* GET ?hoja=servicios|agenda&clave=...  -> la hoja en CSV (solo con la clave correcta).
+   Sin parámetros responde que el registro está activo (para probar la URL). */
+function doGet(e) {
+  var q = (e && e.parameter) || {};
+  if (!q.hoja) return salida({ ok: true, mensaje: "Registro de DataSmart activo." });
+  if (String(q.clave || "") !== CLAVE) return salida({ ok: false, error: "Clave incorrecta." });
+  var nombres = { servicios: HOJA_SERVICIOS, agenda: HOJA_AGENDA };
+  var h = nombres[q.hoja];
+  if (!h) return salida({ ok: false, error: "Hoja no válida." });
+  var hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(h);
+  if (!hoja) return salida({ ok: false, error: "Falta la hoja " + h + " en el archivo." });
+  return csvSalida(aCsv(hoja.getDataRange().getValues()));
 }
+
+function csvSalida(t) { return ContentService.createTextOutput(t).setMimeType(ContentService.MimeType.CSV); }
+function celdaCsv(v) {
+  if (v instanceof Date) v = Utilities.formatDate(v, "America/Bogota", "yyyy-MM-dd");
+  var t = String(v == null ? "" : v);
+  return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+}
+function aCsv(filas) { return filas.map(function (f) { return f.map(celdaCsv).join(","); }).join("\n") + "\n"; }
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(20000)) return salida({ ok: false, error: "Hay otro registro en curso. Intenta de nuevo en unos segundos." });
   try {
     var p = JSON.parse(e.postData.contents);
+    if (String(p.clave || "") !== CLAVE) return salida({ ok: false, error: "Clave incorrecta. Revisa la clave del equipo." });
     return salida(registrarCita(p));
   } catch (err) {
     return salida({ ok: false, error: "No se pudo registrar: " + err });

@@ -50,3 +50,32 @@ section.block > .head { display: grid; gap: 6px; margin-bottom: 26px; }
 
 @keyframes sube { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* Pantalla de clave del equipo */
+.salir { appearance: none; background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 6px; padding: 6px 10px; font: 600 13px var(--f-body); cursor: pointer; }
+.acceso { min-height: 70vh; display: grid; place-items: center; padding: 40px 20px; }
+.acceso-in { width: min(420px, 100%); display: grid; gap: 14px; }
+.acceso h1 { font-family: var(--f-display); font-weight: 700; font-size: 30px; letter-spacing: -.01em; margin: 0; color: var(--ink); }
+.acceso p { margin: 0; color: var(--muted); }
+.acc-form { display: grid; gap: 8px; margin-top: 6px; }
+.acc-form label { font-weight: 600; font-size: 14px; color: var(--ink); }
+.acc-form input { font: 16px var(--f-body); padding: 11px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); }
+.acc-form .btn { justify-self: start; margin-top: 6px; }
+.acc-msg { min-height: 1.4em; color: #b42318 !important; font-size: 14.5px; }
+
+/* Estadística del tablero */
+.tabla { width: 100%; border-collapse: collapse; font-size: 15px; margin: 10px 0 14px; }
+.tabla th, .tabla td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+.tabla th { font-size: 13px; color: var(--muted); font-weight: 600; }
+.tabla td:not(:first-child), .tabla th:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+.est { padding: 18px 0; border-top: 1px solid var(--line); }
+.est h3 { font: 700 19px var(--f-display); margin: 0 0 6px; color: var(--ink); }
+.est .resp { margin: 4px 0 10px; color: var(--ink-2); }
+.est .muestra { font-size: 13.5px; color: var(--muted); margin: 6px 0 0; }
+.est-caja { width: 100%; max-width: 640px; height: auto; color: var(--ink-2); display: block; margin: 8px 0; }
+.est-fila { display: grid; grid-template-columns: minmax(120px, 1.2fr) 2fr auto; gap: 4px 12px; align-items: center; padding: 6px 0; font-size: 15px; }
+.est-fila small { grid-column: 2 / 4; color: var(--muted); font-size: 13px; }
+.est-barra { height: 10px; background: var(--soft); border-radius: 2px; overflow: hidden; }
+.est-barra i { display: block; height: 100%; background: var(--accent); }
+.est .vere { font: 600 15px var(--f-body); margin: 8px 0 0; color: var(--ink-2); }
+.est .vere.si { color: var(--accent); }

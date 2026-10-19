@@ -145,10 +145,23 @@
       <b>DataSmart</b><span id="negocio">Peluquería Meylin · Maicao</span>
     </a>
     <nav class="nav" aria-label="Principal"><a href="index.html">Registrar cita</a><a href="tablero.html" aria-current="page">Tablero</a></nav>
+    <button class="salir" id="salir" type="button" hidden>Salir</button>
   </div>
 </header>
 
-<main class="wrap">
+<section class="acceso" id="acceso" aria-labelledby="acc-h">
+  <div class="acceso-in">
+    <h1 id="acc-h">Acceso del equipo</h1>
+    <p>Esta página es para registrar citas y es solo del equipo. Escribe la clave para entrar; el navegador la recuerda en este dispositivo.</p>
+    <form id="acc-form" class="acc-form">
+      <label for="clave">Clave del equipo</label>
+      <input id="clave" type="password" autocomplete="current-password" required>
+      <button class="btn" type="submit" id="acc-btn">Entrar</button>
+    </form>
+    <p class="acc-msg" id="acc-msg" role="status"></p>
+  </div>
+</section>
+<main class="wrap" id="contenido" hidden>
   <div class="bar-top">
     <div>
       <h1 class="h1">La agenda, leída</h1>
@@ -164,6 +177,7 @@
   <div id="avisos"></div>
   <nav class="tabs" role="tablist" aria-label="Secciones">
     <button type="button" role="tab" data-tab="resumen" aria-selected="true">Resumen</button>
+    <button type="button" role="tab" data-tab="estadistica" aria-selected="false">Estadística</button>
     <button type="button" role="tab" data-tab="preguntas" aria-selected="false">Preguntas</button>
     <button type="button" role="tab" data-tab="calidad" aria-selected="false">Calidad y método</button>
   </nav>
@@ -210,6 +224,13 @@
     <ul class="hacer" id="hacer"></ul>
   </section>
 
+  </div>
+
+  <div class="panel" id="p-estadistica" hidden>
+    <section class="block" style="border-top:0;padding-top:34px">
+      <div class="head"><h2 class="h2">Estadística de la agenda</h2><p class="note">Cada número trae su tamaño de muestra. Con pocas citas, los intervalos son anchos y las diferencias pueden ser azar. Se calcula con el periodo elegido arriba.</p></div>
+      <div id="est"></div>
+    </section>
   </div>
 
   <div class="panel" id="p-preguntas" hidden>
@@ -340,9 +361,9 @@
     $("foot").textContent = (data.modo === "demo" ? "Datos de demostración: la agenda de 17 al 29 de agosto de 2026, sin nombres. " : "Datos de la hoja de Google. ") + "Actualizado a las " + loadedAt + ". Los datos no muestran nombres de clientas.";
   }
 
-  function load() {
+  function load(d0) {
     $("periodo").textContent = "Cargando datos…";
-    return X.loadData().then(function (d) {
+    return Promise.resolve(d0).then(function (d) {
       data = d; loadedAt = new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }).replace(/\.$/, "");
       var av = d.avisos.slice(); if (d.modo === "demo" && !av.length) av.push("Estás viendo datos de demostración. Conecta las hojas en config.js para ver la agenda real.");
       $("avisos").innerHTML = av.map(function (a) { return '<div class="aviso' + (d.avisos.length ? " err" : "") + '" role="status">' + esc(a) + "</div>"; }).join("");
@@ -354,12 +375,68 @@
   ["desde", "hasta"].forEach(function (id) { $(id).addEventListener("change", function () { if (data) renderAll(); }); });
   $("todo").addEventListener("click", function () { $("desde").value = ""; $("hasta").value = ""; if (data) renderAll(); });
   /* Pestañas */
-  var TABS = ["resumen", "preguntas", "calidad"];
+  var TABS = ["resumen", "estadistica", "preguntas", "calidad"];
   function showTab(n) {
     TABS.forEach(function (t) { $("p-" + t).hidden = t !== n; document.querySelector('.tabs [data-tab="' + t + '"]').setAttribute("aria-selected", t === n ? "true" : "false"); });
     try { history.replaceState(null, "", "#" + n); } catch (e) {}
   }
   document.querySelector(".tabs").addEventListener("click", function (e) { var b = e.target.closest("[data-tab]"); if (b) showTab(b.dataset.tab); });
+
+  /* Estadística */
+  function pct1(x) { return (Math.round(x * 1000) / 10).toString().replace(".", ",") + " %"; }
+  function boxSvg(t) {
+    var min = t.min, max = t.max, span = (max - min) || 1, X0 = 60, W = 520;
+    var x = function (v) { return X0 + (v - min) / span * W; };
+    return '<svg class="est-caja" viewBox="0 0 640 64" role="img" aria-label="Rango de ingreso por cita: mínimo ' + X.money(min) + ', mediana ' + X.money(t.mediana) + ', máximo ' + X.money(max) + '">' +
+      '<line x1="' + x(min) + '" x2="' + x(max) + '" y1="32" y2="32" stroke="currentColor" stroke-width="2" opacity=".5"/>' +
+      '<rect x="' + x(t.q1) + '" width="' + Math.max(2, x(t.q3) - x(t.q1)) + '" y="18" height="28" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/>' +
+      '<line x1="' + x(t.mediana) + '" x2="' + x(t.mediana) + '" y1="14" y2="50" stroke="var(--accent)" stroke-width="3"/>' +
+      '<text x="' + x(min) + '" y="62" font-size="12" text-anchor="middle" fill="currentColor">' + X.money(min) + '</text>' +
+      '<text x="' + x(max) + '" y="62" font-size="12" text-anchor="middle" fill="currentColor">' + X.money(max) + '</text></svg>';
+  }
+  function tablaTasas(lista, titulo) {
+    return '<table class="tabla"><thead><tr><th>' + titulo + '</th><th>Citas</th><th>No llegaron</th><th>Tasa</th><th>Intervalo 95 %</th></tr></thead><tbody>' +
+      lista.map(function (g) { return '<tr><td>' + X.esc(g.k || "(sin dato)") + '</td><td>' + g.n + '</td><td>' + g.noll + '</td><td>' + pct1(g.p) + '</td><td>' + pct1(g.lo) + ' a ' + pct1(g.hi) + '</td></tr>'; }).join("") +
+      '</tbody></table>';
+  }
+  function veredictoFisher(c, etiqueta) {
+    if (!c) return '<p class="note">' + etiqueta + ': no hay suficientes casos en los dos grupos para comparar.</p>';
+    var ok = c.p < 0.05, pTxt = c.p.toFixed(3).replace(".", ",");
+    return '<p class="vere ' + (ok ? "si" : "no") + '">' + etiqueta + ": p = " + pTxt + (ok ? ". La diferencia es clara en esta muestra." : ". Todavía no es concluyente: con estos casos la diferencia puede ser azar.") + '</p>';
+  }
+  function renderEstadistica() {
+    var root = $("est"); if (!root || !data) return;
+    var E = DSA.estadistica(data.citas, data.servicios, { desde: $("desde").value, hasta: $("hasta").value });
+    if (!E.n) { root.innerHTML = '<p class="note">No hay citas en este periodo.</p>'; return; }
+    var t = E.ticket, m = X.money, h = "";
+    h += '<article class="est"><h3>¿Cuánto paga una clienta por cita?</h3>';
+    if (!E.nAtt) h += '<p class="note">No hay citas atendidas en este periodo.</p>';
+    else {
+      h += '<p class="resp">La mitad de las citas cuesta entre ' + m(t.q1) + ' y ' + m(t.q3) + ', y la mediana es ' + m(t.mediana) + '. El promedio es ' + m(t.media) + (t.ic ? '; con 95 % de confianza, el promedio real está entre ' + m(t.ic.lo) + ' y ' + m(t.ic.hi) + '.' : '.') + '</p>';
+      h += boxSvg(t);
+    }
+    h += '<p class="muestra">n = ' + E.nAtt + ' citas atendidas' + (E.nAtt < 30 ? '. Con menos de 30 citas, el intervalo es ancho: úsalo como orden de magnitud.' : '.') + '</p></article>';
+
+    h += '<article class="est"><h3>¿Cómo va cada semana?</h3>';
+    if (E.semanas.length < 3) h += '<p class="note">Solo hay ' + E.semanas.length + (E.semanas.length === 1 ? ' semana' : ' semanas') + ' con datos. Con tan pocas semanas no se puede hablar de tendencia: solo se describe lo que pasó en cada una.</p>';
+    h += '<table class="tabla"><thead><tr><th>Semana (desde el lunes)</th><th>Citas</th><th>Atendidas</th><th>Ingreso</th><th>Ticket promedio</th><th>No llegaron</th></tr></thead><tbody>' +
+      E.semanas.map(function (s) { return '<tr><td>' + X.fmtDate(s.semana) + '</td><td>' + s.citas + '</td><td>' + s.atendidas + '</td><td>' + m(s.ing) + '</td><td>' + (s.atendidas ? m(s.ticket) : "—") + '</td><td>' + pct1(s.tasaNoll) + '</td></tr>'; }).join("") +
+      '</tbody></table></article>';
+
+    h += '<article class="est"><h3>¿Quién no llega?</h3>';
+    h += '<p class="resp">Compara la tasa de citas que no llegaron según el canal y el tipo de clienta. Cada tasa trae su intervalo: si los intervalos se cruzan, no se puede decir que una sea mayor.</p>';
+    h += tablaTasas(E.canal, "Cómo llegó") + veredictoFisher(E.contrasteCanal, "WhatsApp frente a los demás canales");
+    h += tablaTasas(E.tipo, "Tipo de clienta") + veredictoFisher(E.contrasteTipo, "Clientas nuevas frente a las que ya venían");
+    h += '</article>';
+
+    h += '<article class="est"><h3>¿Qué servicios explican el ingreso?</h3>';
+    h += '<p class="resp">' + (E.para80 === 1 ? 'Un solo servicio explica' : E.para80 + ' servicios explican') + ' el 80 % del ingreso del periodo.</p>';
+    h += E.pareto.map(function (p) {
+      return '<div class="est-fila"><span>' + X.esc(p.servicio) + '</span><div class="est-barra"><i style="width:' + p.pct.toFixed(1) + '%"></i></div><b>' + pct1(p.pct / 100) + '</b><small>acumulado ' + pct1(p.acum / 100) + '</small></div>';
+    }).join("");
+    h += '</article>';
+    root.innerHTML = h;
+  }
 
   /* Preguntas */
   function renderPreguntas() {
@@ -392,9 +469,9 @@
 
   /* Renderizado: se agregan las nuevas partes al cambio de periodo */
   var _renderAll = renderAll;
-  renderAll = function () { _renderAll(); renderPreguntas(); renderCalidad(); };
+  renderAll = function () { _renderAll(); renderPreguntas(); renderCalidad(); renderEstadistica(); };
   var h0 = (location.hash || "").replace("#", ""); if (TABS.indexOf(h0) >= 0) showTab(h0);
-  load();
+  X.acceso(function (d) { load(d); });
 })();
 </script>
 </body>

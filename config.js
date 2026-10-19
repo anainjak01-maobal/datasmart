@@ -5,14 +5,14 @@
 window.DS_CONFIG = {
   NEGOCIO: "Peluquería Meylin · Maicao",
 
-  /* Enlaces CSV de las hojas publicadas (Archivo > Compartir > Publicar en la web > CSV).
-     Publica SOLO las hojas Servicios y Agenda. La hoja Agenda que se publica no debe tener nombres de clientas. */
+  /* Ya no se usan enlaces CSV: el script lee las hojas con la clave del equipo.
+     No publiques las hojas en la web (Archivo > Compartir > Publicar en la web). Puedes dejar estos enlaces vacíos. */
   HOJAS: {
     servicios: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXaWGxfXQ7LxKnErJvYiIR25yRmjwUcHL8hON2Xe8fjQbhb5nZ-QMdrWOrye2X6cpqbtczj08n3JCp/pub?gid=1260693872&single=true&output=csv",
     agenda: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXaWGxfXQ7LxKnErJvYiIR25yRmjwUcHL8hON2Xe8fjQbhb5nZ-QMdrWOrye2X6cpqbtczj08n3JCp/pub?gid=2016744713&single=true&output=csv"
   },
 
-  /* Registro automático: dirección de la aplicación web de Apps Script (ver LEEME.txt, paso 4).
-     Si queda vacío, la página de registro muestra el modo de demostración y no guarda nada. */
+  /* OBLIGATORIO: dirección de la aplicación web de Apps Script (termina en /exec, ver LEEME.txt, paso 3).
+     Sin esto, ni el tablero ni el registro de citas abren. */
   REGISTRO: ""
 };

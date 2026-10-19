@@ -165,5 +165,77 @@
     return L;
   }
 
-  w.DSA = { analizar: analizar, lecturas: lecturas, preguntas: preguntas, calidad: calidad, fisher: fisher };
+  /* ---- Estadística: distribución, tendencia, tasas con intervalo y contrastes ---- */
+  function rng(seed) { var s = seed >>> 0; return function () { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+  function quantil(arr, q) {
+    var a = arr.slice().sort(function (x, y) { return x - y; }); if (!a.length) return 0;
+    var pos = (a.length - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos);
+    return a[lo] + (a[hi] - a[lo]) * (pos - lo);
+  }
+  function media(arr) { return arr.length ? sum(arr, function (x) { return x; }) / arr.length : 0; }
+  function desvEst(arr) { if (arr.length < 2) return 0; var m = media(arr); return Math.sqrt(sum(arr, function (x) { return (x - m) * (x - m); }) / (arr.length - 1)); }
+  /* Intervalo de Wilson al 95 % para una proporción (sirve con muestras chicas) */
+  function wilson(k, n) {
+    if (!n) return { p: 0, lo: 0, hi: 0 };
+    var z = 1.96, p = k / n, d = 1 + z * z / n, c = (p + z * z / (2 * n)) / d, h = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d;
+    return { p: p, lo: Math.max(0, c - h), hi: Math.min(1, c + h) };
+  }
+  /* Intervalo de confianza al 95 % del promedio por bootstrap (remuestreo con semilla fija: siempre da el mismo resultado) */
+  function bootMedia(arr, B) {
+    if (arr.length < 2) return null;
+    var R = rng(20260830), out = [], n = arr.length;
+    for (var b = 0; b < B; b++) { var s = 0; for (var i = 0; i < n; i++) s += arr[Math.floor(R() * n)]; out.push(s / n); }
+    return { lo: quantil(out, 0.025), hi: quantil(out, 0.975) };
+  }
+  function semanaDe(iso) {
+    var d = new Date(iso + "T12:00:00"), dow = (d.getDay() + 6) % 7;
+    return X.addDays(iso, -dow);
+  }
+  function tasas(rows, keyFn) {
+    var G = {};
+    rows.forEach(function (c) {
+      var k = keyFn(c) || "", o = G[k] || (G[k] = { k: k, n: 0, noll: 0 });
+      o.n++; if (norm(c.estado) !== ATENDIDA) o.noll++;
+    });
+    return Object.keys(G).map(function (k) { var o = G[k], w = wilson(o.noll, o.n); o.p = w.p; o.lo = w.lo; o.hi = w.hi; return o; })
+      .sort(function (a, b) { return b.n - a.n; });
+  }
+  /* Contraste de Fisher: grupo que cumple la condición frente al resto, sobre la tasa de no llegada */
+  function contraste(rows, enGrupo) {
+    var a = 0, b = 0, c = 0, d = 0;
+    rows.forEach(function (r) {
+      var g = enGrupo(r), no = norm(r.estado) !== ATENDIDA;
+      if (g && no) a++; else if (g) b++; else if (no) c++; else d++;
+    });
+    if (!(a + b) || !(c + d)) return null;
+    return { p: fisher(a, b, c, d), n1: a + b, n2: c + d, k1: a, k2: c };
+  }
+
+  function estadistica(citas, servicios, opt) {
+    var A = analizar(citas, servicios, opt), att = A.att, rows = A.rows;
+    var tk = att.map(function (c) { return c.precio; });
+    var E = { n: A.n, nAtt: att.length };
+    E.ticket = {
+      media: media(tk), mediana: quantil(tk, 0.5), q1: quantil(tk, 0.25), q3: quantil(tk, 0.75),
+      min: tk.length ? Math.min.apply(null, tk) : 0, max: tk.length ? Math.max.apply(null, tk) : 0,
+      sd: desvEst(tk), ic: bootMedia(tk, 2000)
+    };
+    var S = {};
+    rows.forEach(function (c) {
+      var k = semanaDe(c.fecha), o = S[k] || (S[k] = { semana: k, citas: 0, atendidas: 0, noll: 0, ing: 0 });
+      o.citas++;
+      if (norm(c.estado) === ATENDIDA) { o.atendidas++; o.ing += c.precio; } else o.noll++;
+    });
+    E.semanas = Object.keys(S).sort().map(function (k) { var o = S[k]; o.tasaNoll = o.citas ? o.noll / o.citas : 0; o.ticket = o.atendidas ? o.ing / o.atendidas : 0; return o; });
+    E.canal = tasas(rows, function (c) { return c.llegada; });
+    E.tipo = tasas(rows, function (c) { return c.tipo; });
+    E.contrasteCanal = contraste(rows, function (c) { return c.llegada === "WhatsApp"; });
+    E.contrasteTipo = contraste(rows, function (c) { return c.tipo === "Nueva"; });
+    var orden = A.servicios.slice().sort(function (a, b) { return b.ing - a.ing; }), tot = A.ing, acum = 0;
+    E.pareto = orden.map(function (s) { acum += s.ing; return { servicio: s.servicio, ing: s.ing, pct: tot ? s.ing * 100 / tot : 0, acum: tot ? acum * 100 / tot : 0 }; });
+    E.para80 = E.pareto.filter(function (p, i, arr) { return i === 0 || arr[i - 1].acum < 80; }).length;
+    return E;
+  }
+
+  w.DSA = { estadistica: estadistica, analizar: analizar, lecturas: lecturas, preguntas: preguntas, calidad: calidad, fisher: fisher };
 })(window);

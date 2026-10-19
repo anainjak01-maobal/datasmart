@@ -1,44 +1,59 @@
 DATASMART · SITIO DE LA AGENDA (Peluquería Meylin)
+==================================================
 
-Qué hace
-- Pestaña Resumen: el margen, las lecturas de la agenda y los cuatro cambios para la semana siguiente.
-- Pestaña Preguntas: cuatro preguntas, cada una con su muestra y su veredicto ("se puede afirmar" o "todavía no").
-- Pestaña Calidad y método: revisiones automáticas de los datos, las cinco etapas del análisis y los errores corregidos.
-- Botón Descargar CSV: la agenda limpia, sin nombres, para abrir en Excel o Power BI.
-- Registrar una cita: servicio, cómo llegó, clienta nueva o que ya venía, y si llegó o no.
-- Tablero: margen por servicio, días de la semana, quién viene, quién no llega y cuatro cambios para la otra semana.
-- El precio y el costo salen de la hoja Servicios. Nadie los escribe en la cita.
+QUÉ HAY Y QUIÉN LO USA
+  Todo el sitio es SOLO DEL EQUIPO. Está protegido con una clave.
+  - Registrar cita (index.html): anotar cada cita (servicio, cómo llegó, clienta nueva o que ya venía,
+    atendida o no llegó). El precio y el costo salen de la hoja Servicios.
+  - Tablero (tablero.html): resumen, estadística, preguntas, calidad y método, y descarga de la agenda limpia (sin nombres).
+    Estadística: distribución del ingreso por cita (mediana, cuartiles, intervalo del promedio por bootstrap),
+    tendencia semanal, tasas de no llegada por canal y tipo de clienta con intervalo de Wilson y prueba de Fisher,
+    y reparto del ingreso por servicio (Pareto). Cada número trae su tamaño de muestra.
+  Ninguna clienta necesita entrar al sitio. Por eso no se comparte ningún enlace con clientes.
 
-Privacidad (importante)
-- La hoja Agenda que se PUBLICA no debe tener nombres de clientas. Los nombres se quedan solo en el cuaderno o en un Excel privado.
-- El sitio no pide nombres. No hacen falta para leer la agenda.
+PRIVACIDAD
+  - El sitio no pide nombres de clientas. La hoja Agenda no debe tener nombres.
+  - Los nombres, si se llevan, quedan en el cuaderno o en un Excel privado.
+  - No publiques las hojas en la web: el acceso es solo por la clave a través del script.
 
 PASO 1. Hoja de Google
-1. Abre el archivo datasmart-datos.xlsx en Google Drive y elige Archivo > Importar, o súbelo y ábrelo con Google Sheets.
-2. Deben quedar las hojas Servicios y Agenda (las demás pestañas no se publican).
+  1. Abre datasmart-datos.xlsx en Google Drive y elige Archivo > Importar, o súbelo y ábrelo con Google Sheets.
+  2. Deben quedar las hojas Servicios y Agenda con esos nombres exactos (las demás pestañas no se usan aquí).
+  3. NO publicar en la web ninguna hoja. Si ya la publicaste: Archivo > Compartir > Publicar en la web > Dejar de publicar.
 
-PASO 2. Publicar las dos hojas
-1. Archivo > Compartir > Publicar en la web.
-2. En la lista elige Servicios, formato CSV, y Publicar. Copia el enlace.
-3. Repite con Agenda. Copia el segundo enlace.
-4. Pega los dos enlaces en config.js, dentro de HOJAS (servicios y agenda).
+PASO 2. Clave del equipo (en el script)
+  Abre Extensiones > Apps Script, pega el contenido de apps-script/Codigo.gs y en la línea
+      var CLAVE = "cambia-esta-clave";
+  cambia el texto por una clave que solo conozca el equipo (ej. "Meylin2026-equipo"). Guarda.
 
-PASO 3. Registro automático (Apps Script)
-1. En la hoja: Extensiones > Apps Script. Borra lo que aparezca y pega el contenido de apps-script/Codigo.gs.
-2. Guarda (disco). Luego Implementar > Nueva implementación > tipo "Aplicación web".
-3. Ejecutar como: Yo. Quién tiene acceso: Cualquier persona. Implementar y autorizar con tu cuenta.
-4. Copia la URL que termina en /exec y pégala en config.js, en REGISTRO.
-5. Prueba: abre esa URL en el navegador. Debe aparecer {"ok":true,...}.
+PASO 3. Registro y lectura automática (Apps Script)
+  1. Guarda (disco). Luego Implementar > Nueva implementación > tipo "Aplicación web".
+  2. Ejecutar como: Yo. Quién tiene acceso: Cualquier persona. Implementar y autorizar con tu cuenta.
+  3. Copia la URL que termina en /exec y pégala en config.js, en REGISTRO. Sube config.js a GitHub.
+  4. Prueba: abre esa URL en el navegador. Debe aparecer {"ok":true,...}. Eso NO muestra datos: es normal.
+  Si cambias la clave o el script, haz una versión nueva:
+  Implementar > Administrar implementaciones > editar > Versión nueva > Implementar.
 
 PASO 4. Subir el sitio a GitHub Pages
-1. En GitHub, crea el repositorio datasmart y sube todos los archivos de esta carpeta.
-2. Settings > Pages > Deploy from a branch > main / root.
-3. El sitio queda en https://TU-USUARIO.github.io/datasmart/ (la página de registro es index.html y el tablero es tablero.html).
+  1. En GitHub crea un repositorio PÚBLICO (ej. datasmart) y sube todos los archivos de esta carpeta.
+  2. Settings > Pages > Deploy from a branch > main / root.
+  3. El sitio queda en https://TU-USUARIO.github.io/datasmart/
+     - Registrar cita: .../datasmart/index.html
+     - Tablero:        .../datasmart/tablero.html
 
-Cómo se cambia un servicio o un precio
-- En la hoja Servicios: se cambia el precio o el costo. La página lo toma en la siguiente carga.
-- Un servicio nuevo se agrega al final de la hoja Servicios.
+CÓMO ENTRA EL EQUIPO
+  - La primera vez escribe la clave; el navegador la recuerda en ese dispositivo.
+  - Botón "Salir" (arriba a la derecha) borra la clave guardada en ese navegador.
+  - Si la clave no coincide, la pantalla lo dice. Si falta REGISTRO en config.js, la pantalla lo indica.
 
-Qué no hace todavía (para la siguiente versión)
-- No mide cuánto dura cada servicio. Sin eso no hay margen por hora de silla.
-- No confirma citas por WhatsApp; solo registra si llegó.
+CÓMO SE CAMBIA UN SERVICIO O UN PRECIO
+  - En la hoja Servicios: se cambia el precio o el costo. El sitio lo toma en la siguiente carga.
+  - Un servicio nuevo se agrega al final de la hoja Servicios.
+
+LÍMITES QUE CONVIENE SABER
+  - La clave es compartida y sencilla: sirve para que el público no vea nada, no para una seguridad fuerte.
+    Si se filtra, cámbiala en Codigo.gs y haz una versión nueva.
+  - Sin REGISTRO en config.js el sitio no abre (ya no hay datos de demostración para el equipo).
+  - GitHub Pages es público: el código se puede leer, pero no contiene datos ni la clave.
+  - No mide cuánto dura cada servicio, así que no hay margen por hora de silla.
+  - No confirma citas por WhatsApp; solo registra si llegó.

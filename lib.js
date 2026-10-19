@@ -84,6 +84,7 @@
 
   /* Envía una cita al script. Siempre resuelve: { ok, ... } */
   function registrar(payload) {
+    payload.clave = claveActual;
     if (!CFG.REGISTRO) return Promise.resolve({ ok: false, sinConfig: true });
     if (!/\/exec$/.test(CFG.REGISTRO)) return Promise.resolve({ ok: false, error: "El enlace de REGISTRO en config.js debe terminar en /exec." });
     return fetch(CFG.REGISTRO, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
@@ -97,5 +98,63 @@
       });
   }
 
-  w.DS = { norm: norm, esc: esc, money: money, toNum: toNum, sum: sum, today: today, parseDate: parseDate, fmtDate: fmtDate, dayName: dayName, addDays: addDays, ORDEN: ORDEN, parseCSV: parseCSV, loadData: loadData, registrar: registrar, CFG: CFG };
+  /* ---- Acceso del equipo con clave ---- */
+  var CLAVE_KEY = "datasmart-clave", claveActual = "";
+  function leerClave() { try { return localStorage.getItem(CLAVE_KEY) || ""; } catch (e) { return ""; } }
+  function guardarClave(c) { try { localStorage.setItem(CLAVE_KEY, c); } catch (e) {} }
+  function olvidarClave() { try { localStorage.removeItem(CLAVE_KEY); } catch (e) {} }
+
+  /* Pide las hojas al script con la clave. Rechaza con Error("clave"), Error("sinregistro"), Error("servidor:texto") o Error("red"). */
+  function loadEquipo(clave) {
+    var R = CFG.REGISTRO;
+    if (!R) return Promise.reject(new Error("sinregistro"));
+    var sep = R.indexOf("?") < 0 ? "?" : "&";
+    function get(h) {
+      return fetch(R + sep + "hoja=" + h + "&clave=" + encodeURIComponent(clave) + "&t=" + Date.now(), { cache: "no-store" })
+        .catch(function () { throw new Error("red"); })
+        .then(function (r) { if (!r.ok) throw new Error("red"); return r.text(); })
+        .then(function (t) {
+          if (/^\s*\{/.test(t)) {
+            var j = {}; try { j = JSON.parse(t); } catch (e) {}
+            if (/clave/i.test(j.error || "")) throw new Error("clave");
+            throw new Error("servidor:" + (j.error || "Respuesta no válida."));
+          }
+          return t;
+        });
+    }
+    return Promise.all([get("servicios"), get("agenda")]).then(function (t) {
+      var a = toObjects("servicios", t[0]), b = toObjects("agenda", t[1]), avisos = [];
+      [["Servicios", a], ["Agenda", b]].forEach(function (x) { if (x[1].missing.length) avisos.push("En la hoja " + x[0] + " no encuentro la columna: " + x[1].missing.join(", ") + "."); });
+      claveActual = clave;
+      return { servicios: cleanServicios(a.rows), citas: cleanCitas(b.rows), modo: "hojas", avisos: avisos };
+    });
+  }
+
+  /* Muestra #contenido solo con la clave correcta. onOk(datos) se llama al entrar. */
+  function acceso(onOk) {
+    var $ = function (id) { return document.getElementById(id); };
+    var acc = $("acceso"), cont = $("contenido"), salir = $("salir"), form = $("acc-form"), inp = $("clave"), msg = $("acc-msg"), btn = $("acc-btn");
+    function mostrar() { acc.hidden = true; cont.hidden = false; if (salir) salir.hidden = false; }
+    function pedir(m) { acc.hidden = false; cont.hidden = true; if (salir) salir.hidden = true; msg.textContent = m || ""; inp.focus(); }
+    function mensaje(err) {
+      if (err.message === "clave") return "La clave no es correcta.";
+      if (err.message === "sinregistro") return "Falta conectar el script de registro (REGISTRO en config.js).";
+      if (err.message.indexOf("servidor:") === 0) return err.message.slice(8);
+      return "No se pudo conectar con la hoja. Revisa tu conexión e intenta de nuevo.";
+    }
+    function entrar(clave) { return loadEquipo(clave).then(function (d) { guardarClave(clave); return d; }); }
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var c = inp.value.trim(); if (!c) return;
+      btn.disabled = true; msg.textContent = "Revisando la clave…";
+      entrar(c).then(function (d) { btn.disabled = false; inp.value = ""; mostrar(); onOk(d); },
+        function (err) { btn.disabled = false; pedir(mensaje(err)); });
+    });
+    if (salir) salir.addEventListener("click", function () { olvidarClave(); location.reload(); });
+    var guardada = leerClave();
+    if (guardada) { msg.textContent = "Cargando…"; entrar(guardada).then(function (d) { mostrar(); onOk(d); }, function (err) { pedir(mensaje(err)); }); }
+    else pedir("");
+  }
+
+  w.DS = { loadEquipo: loadEquipo, acceso: acceso, norm: norm, esc: esc, money: money, toNum: toNum, sum: sum, today: today, parseDate: parseDate, fmtDate: fmtDate, dayName: dayName, addDays: addDays, ORDEN: ORDEN, parseCSV: parseCSV, loadData: loadData, registrar: registrar, CFG: CFG };
 })(window);
