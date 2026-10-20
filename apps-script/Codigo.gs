@@ -15,7 +15,7 @@ var DIAS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "S�
 
 /* Clave del equipo: la usan el tablero y el registro de citas.
    CAMBIARLA antes de implementar. */
-var CLAVE = "cambia-esta-clave";
+var CLAVE = "Data12345";
 
 /* GET ?servicios=1                -> servicio y precio (público, sin costos).
    GET ?hoja=servicios|agenda|solicitudes&clave=... -> la hoja en CSV (solo con la clave).
